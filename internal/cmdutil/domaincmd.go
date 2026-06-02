@@ -42,6 +42,8 @@ func (f *Factory) listCmd(obj catalog.Object) *cobra.Command {
 		top       int
 		pageAll   bool
 		pageLimit int
+		sum       string
+		groupBy   string
 	)
 	vals := map[string]*string{}
 	cmd := &cobra.Command{
@@ -57,7 +59,7 @@ func (f *Factory) listCmd(obj catalog.Object) *cobra.Command {
 				return errs.NewValidation(err.Error(), "查看 --help 的过滤选项", "")
 			}
 			q := k3client.QueryArgs{FormID: obj.FormID, Fields: obj.Fields(), Filter: filter, Top: top}
-			return f.RunBillQuery(cmd.Context(), q, pageAll, pageLimit)
+			return f.RunBillQuery(cmd.Context(), q, QueryOpts{PageAll: pageAll, PageLimit: pageLimit, Sum: sum, GroupBy: groupBy})
 		},
 	}
 	for _, fl := range obj.Filters {
@@ -70,6 +72,8 @@ func (f *Factory) listCmd(obj catalog.Object) *cobra.Command {
 	cmd.Flags().IntVar(&top, "top", 0, "返回上限 (0=不限)")
 	cmd.Flags().BoolVar(&pageAll, "page-all", false, "自动翻页直到取完")
 	cmd.Flags().IntVar(&pageLimit, "page-limit", 10, "--page-all 最多翻页数 (0=不限)")
+	cmd.Flags().StringVar(&sum, "sum", "", "对该字段求和(自动补进查询列、自动取全量)")
+	cmd.Flags().StringVar(&groupBy, "group-by", "", "按该字段分组统计(配合 --sum)")
 	return cmd
 }
 

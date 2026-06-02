@@ -76,5 +76,22 @@ openerp inventory balance list --material 2.60.51.0439          # 某物料各�
 openerp purchase price list --material 4.50.20.1549 --jq '.data'
 ```
 
+## 统计：--sum / --group-by（list 与 query 通用）
+客户端聚合（自动把字段补进查询、自动取全量再算）：
+```bash
+# 5月销售总额(价税合计本位币) + 单数
+openerp sales order list --date-from 2026-05-01 --date-to 2026-05-31 --sum FBillAllAmount_LC
+#   → {"count":717,"sum":8672253.86,"sumField":"FBillAllAmount_LC"}
+
+# 5月按客户分组(金额降序)
+openerp sales order list --date-from 2026-05-01 --date-to 2026-05-31 \
+  --sum FBillAllAmount_LC --group-by FCustId.FName
+#   → [{"group":"润材电子商务有限公司","count":23,"sum":815733.38}, ...]
+
+# 只分组计数(不求和)：每个供应商的采购订单数
+openerp purchase order list --date-from 2026-01-01 --group-by FSupplierId.FName
+```
+要点：`--sum`/`--group-by` 的字段需是该对象可查字段（不在默认列里也会自动补查）；金额字段如 `FBillAllAmount`(价税合计)、`FBillAllAmount_LC`(本位币)、`FBillAmount`(不含税)、`FBillTaxAmount`(税额)。
+
 ## 想查清单外的对象？
 用发现层：`objects --keyword <词>` 找 FormId → `schema <FormId>` 查字段 → `query --form-id ... --fields ...`（见 `../openerp-discovery`）。

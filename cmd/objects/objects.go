@@ -55,7 +55,7 @@ func New(f *cmdutil.Factory) *cobra.Command {
 				Filter: strings.Join(conds, " and "),
 				Top:    top,
 			}
-			return f.RunBillQuery(cmd.Context(), q, pageAll, pageLimit)
+			return f.RunBillQuery(cmd.Context(), q, cmdutil.QueryOpts{PageAll: pageAll, PageLimit: pageLimit})
 		},
 	}
 	fl := cmd.Flags()

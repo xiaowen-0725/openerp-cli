@@ -3,26 +3,54 @@ package cmdutil
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/xiaowen-0725/openerp-cli/errs"
 	"github.com/xiaowen-0725/openerp-cli/internal/k3client"
 	"github.com/xiaowen-0725/openerp-cli/internal/output"
 )
 
-// RunBillQuery executes an ExecuteBillQuery, honoring --dry-run and --page-all,
-// and emits the result through the standard envelope. Shared by `query` and the
-// `bom list` domain command.
-func (f *Factory) RunBillQuery(ctx context.Context, q k3client.QueryArgs, pageAll bool, pageLimit int) error {
+// QueryOpts controls list/query execution: pagination and optional client-side
+// aggregation (--sum / --group-by). Aggregation forces a full fetch.
+type QueryOpts struct {
+	PageAll   bool
+	PageLimit int
+	Sum       string // sum this field across the result set
+	GroupBy   string // group rows by this field (combine with Sum)
+}
+
+// RunBillQuery executes an ExecuteBillQuery, honoring --dry-run, --page-all and
+// --sum/--group-by aggregation, and emits the result. Shared by `query`, the
+// catalog domain `list` commands, and `bom list`.
+func (f *Factory) RunBillQuery(ctx context.Context, q k3client.QueryArgs, o QueryOpts) error {
 	c, err := f.Client()
 	if err != nil {
 		return err
+	}
+	agg := o.Sum != "" || o.GroupBy != ""
+	if agg {
+		q.Fields = ensureFields(q.Fields, o.GroupBy, o.Sum) // ensure agg columns are selected
 	}
 	if f.DryRun {
 		p := c.Prepare(k3client.EndpointExecuteBillQuery, k3client.BuildBillQueryParams(q))
 		return output.EmitData(f.IOStreams.Out, f.Format, f.Jq, p, nil)
 	}
-	if pageAll {
-		return f.runBillQueryPaged(ctx, c, q, pageLimit)
+	if o.PageAll || agg { // aggregation needs the full result set
+		all, err := f.fetchAllRows(ctx, c, q, o.PageLimit)
+		if err != nil {
+			return err
+		}
+		if agg {
+			res, meta, err := aggregate(splitFields(q.Fields), all, o.Sum, o.GroupBy)
+			if err != nil {
+				return err
+			}
+			return output.EmitData(f.IOStreams.Out, f.Format, f.Jq, res, meta)
+		}
+		return output.EmitData(f.IOStreams.Out, f.Format, f.Jq, all, &output.Meta{Count: len(all)})
 	}
 	raw, err := c.ExecuteBillQuery(ctx, q)
 	if err != nil {
@@ -35,7 +63,8 @@ func (f *Factory) RunBillQuery(ctx context.Context, q k3client.QueryArgs, pageAl
 	return output.EmitData(f.IOStreams.Out, f.Format, f.Jq, data, metaOf(data))
 }
 
-func (f *Factory) runBillQueryPaged(ctx context.Context, c *k3client.Client, q k3client.QueryArgs, pageLimit int) error {
+// fetchAllRows pages through ExecuteBillQuery and returns every row.
+func (f *Factory) fetchAllRows(ctx context.Context, c *k3client.Client, q k3client.QueryArgs, pageLimit int) ([]interface{}, error) {
 	pageSize := q.Limit
 	if pageSize <= 0 {
 		pageSize = 2000
@@ -49,15 +78,15 @@ func (f *Factory) runBillQueryPaged(ctx context.Context, c *k3client.Client, q k
 		pq.Top = 0
 		raw, err := c.ExecuteBillQuery(ctx, pq)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		data := decode(raw)
 		if apiErr := apiErrorIfAny(data); apiErr != nil {
-			return apiErr
+			return nil, apiErr
 		}
 		rows, ok := data.([]interface{})
 		if !ok {
-			return output.EmitData(f.IOStreams.Out, f.Format, f.Jq, data, nil)
+			break
 		}
 		all = append(all, rows...)
 		if len(rows) < pageSize {
@@ -65,7 +94,126 @@ func (f *Factory) runBillQueryPaged(ctx context.Context, c *k3client.Client, q k
 		}
 		start += len(rows)
 	}
-	return output.EmitData(f.IOStreams.Out, f.Format, f.Jq, all, &output.Meta{Count: len(all)})
+	return all, nil
+}
+
+func splitFields(s string) []string {
+	parts := strings.Split(s, ",")
+	for i := range parts {
+		parts[i] = strings.TrimSpace(parts[i])
+	}
+	return parts
+}
+
+// ensureFields appends each non-empty extra field not already present in the
+// comma-separated field list (so --sum/--group-by columns are queried).
+func ensureFields(csv string, extra ...string) string {
+	have := map[string]bool{}
+	for _, p := range splitFields(csv) {
+		have[p] = true
+	}
+	for _, e := range extra {
+		if e != "" && !have[e] {
+			csv += "," + e
+			have[e] = true
+		}
+	}
+	return csv
+}
+
+// aggregate computes --sum / --group-by over decoded rows. fields is the ordered
+// column-name list (from FieldKeys). Returns a grand-total object (no group) or a
+// sum-desc–sorted []group, plus meta.
+func aggregate(fields []string, rows []interface{}, sumF, groupF string) (interface{}, *output.Meta, error) {
+	idx := func(name string) int {
+		for i, fn := range fields {
+			if fn == name {
+				return i
+			}
+		}
+		return -1
+	}
+	si, gi := -1, -1
+	if sumF != "" {
+		if si = idx(sumF); si < 0 {
+			return nil, nil, errs.NewValidation("--sum 字段不在结果列中: "+sumF, "确认字段名(可用 schema 查)，或写进 --fields", "sum")
+		}
+	}
+	if groupF != "" {
+		if gi = idx(groupF); gi < 0 {
+			return nil, nil, errs.NewValidation("--group-by 字段不在结果列中: "+groupF, "确认字段名(可用 schema 查)，或写进 --fields", "group-by")
+		}
+	}
+	num := func(v interface{}) float64 {
+		switch x := v.(type) {
+		case float64:
+			return x
+		case string:
+			fv, _ := strconv.ParseFloat(x, 64)
+			return fv
+		}
+		return 0
+	}
+	cell := func(r []interface{}, i int) interface{} {
+		if i >= 0 && i < len(r) {
+			return r[i]
+		}
+		return nil
+	}
+	asRow := func(v interface{}) []interface{} { r, _ := v.([]interface{}); return r }
+
+	if gi < 0 {
+		var sum float64
+		for _, rr := range rows {
+			if si >= 0 {
+				sum += num(cell(asRow(rr), si))
+			}
+		}
+		res := map[string]interface{}{"count": len(rows)}
+		if si >= 0 {
+			res["sumField"] = sumF
+			res["sum"] = sum
+		}
+		return res, nil, nil
+	}
+	type ag struct {
+		count int
+		sum   float64
+	}
+	m := map[string]*ag{}
+	var order []string
+	for _, rr := range rows {
+		r := asRow(rr)
+		key := fmt.Sprint(cell(r, gi))
+		a := m[key]
+		if a == nil {
+			a = &ag{}
+			m[key] = a
+			order = append(order, key)
+		}
+		a.count++
+		if si >= 0 {
+			a.sum += num(cell(r, si))
+		}
+	}
+	groups := make([]interface{}, 0, len(order))
+	for _, k := range order {
+		a := m[k]
+		g := map[string]interface{}{"group": k, "count": a.count}
+		if si >= 0 {
+			g["sum"] = a.sum
+		}
+		groups = append(groups, g)
+	}
+	sort.SliceStable(groups, func(i, j int) bool {
+		a := groups[i].(map[string]interface{})
+		b := groups[j].(map[string]interface{})
+		if si >= 0 {
+			return a["sum"].(float64) > b["sum"].(float64)
+		}
+		return a["count"].(int) > b["count"].(int)
+	})
+	return groups, &output.Meta{Count: len(groups)}, nil
 }
 
 // RunView executes a View call, honoring --dry-run, and emits the result.

@@ -16,6 +16,8 @@ func New(f *cmdutil.Factory) *cobra.Command {
 		q         k3client.QueryArgs
 		pageAll   bool
 		pageLimit int
+		sum       string
+		groupBy   string
 	)
 	cmd := &cobra.Command{
 		Use:   "query",
@@ -33,7 +35,7 @@ func New(f *cmdutil.Factory) *cobra.Command {
 			if q.Fields == "" {
 				return errs.NewValidation("缺少 --fields", "逗号分隔字段,支持点号,如 FMATERIALIDCHILD.FNumber", "fields")
 			}
-			return f.RunBillQuery(cmd.Context(), q, pageAll, pageLimit)
+			return f.RunBillQuery(cmd.Context(), q, cmdutil.QueryOpts{PageAll: pageAll, PageLimit: pageLimit, Sum: sum, GroupBy: groupBy})
 		},
 	}
 	fl := cmd.Flags()
@@ -46,5 +48,7 @@ func New(f *cmdutil.Factory) *cobra.Command {
 	fl.IntVar(&q.Limit, "limit", 0, "单次返回行数 Limit (0=服务端默认)")
 	fl.BoolVar(&pageAll, "page-all", false, "自动翻页直到取完")
 	fl.IntVar(&pageLimit, "page-limit", 10, "--page-all 最多翻页数 (0=不限)")
+	fl.StringVar(&sum, "sum", "", "对该字段求和(自动补进 --fields、自动取全量)")
+	fl.StringVar(&groupBy, "group-by", "", "按该字段分组统计(配合 --sum)")
 	return cmd
 }

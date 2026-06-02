@@ -66,7 +66,7 @@ func newList(f *cmdutil.Factory) *cobra.Command {
 				Filter: fmt.Sprintf("FMATERIALID.FNumber='%s'", material),
 				Top:    top,
 			}
-			return f.RunBillQuery(cmd.Context(), q, false, 0)
+			return f.RunBillQuery(cmd.Context(), q, cmdutil.QueryOpts{})
 		},
 	}
 	cmd.Flags().StringVar(&material, "material", "", "父物料编码 (必填)")
