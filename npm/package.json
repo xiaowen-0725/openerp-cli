@@ -1,0 +1,43 @@
+{
+  "name": "@xiaowen-0725/openerp-cli",
+  "version": "0.1.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "description": "金蝶云·星空 (Kingdee K3 Cloud) ERP CLI — 为人和 AI Agent 而生(只读查询: BOM/物料/采购/销售/库存/生产等 + 对象发现 + 经验沉淀)",
+  "keywords": [
+    "openerp",
+    "kingdee",
+    "金蝶",
+    "k3cloud",
+    "星空",
+    "erp",
+    "cli",
+    "ai-agent",
+    "bom"
+  ],
+  "bin": {
+    "openerp": "bin/openerp.js"
+  },
+  "scripts": {
+    "postinstall": "node install.js"
+  },
+  "files": [
+    "bin/openerp.js",
+    "install.js",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
+  "license": "MIT"
+}

@@ -5,6 +5,13 @@
 > **可行性 POC（只读）**。打通「配置凭据 → LoginBySign 鉴权 → 真实只读查询 → 干净 JSON → agent 经 SKILL.md 消费」的端到端链路。
 > 写操作、代码生成、多领域命令、skillsync 等为后续阶段（见 `cmd` 注释与计划文档）。
 
+## 安装
+```bash
+npm i -g @xiaowen-0725/openerp-cli   # 跨平台;postinstall 按平台下载原生二进制 + 同步技能到本机各 agent
+openerp --help
+```
+或从源码构建：`make build`（产物 `bin/openerp`）。发布流程见 [`RELEASING.md`](RELEASING.md)。
+
 ## 快速开始
 ```bash
 make build

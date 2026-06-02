@@ -1,4 +1,12 @@
 /bin/
+# goreleaser 构建产物
+/dist/
+node_modules/
+# npm 壳包安装时下载的原生二进制与归档(bin/openerp.js 本身要提交)
+npm/bin/openerp-bin
+npm/bin/openerp-bin.exe
+npm/bin/*.tar.gz
+npm/bin/*.zip
 # Session caches contain a bearer token — never commit them.
 session-*.json
 # Never commit real credentials.
