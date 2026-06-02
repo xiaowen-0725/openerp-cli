@@ -1,5 +1,5 @@
 {
-  "name": "@xiaowen-0725/openerp-cli",
+  "name": "@zhoujw0725/openerp-cli",
   "version": "0.1.0",
   "publishConfig": {
     "access": "public"

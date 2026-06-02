@@ -1,6 +1,6 @@
 # 发布流程(npm)
 
-面向使用者的安装方式是 **npm**(`npm i -g @xiaowen-0725/openerp-cli`)。npm 包是个壳,安装时按平台从
+面向使用者的安装方式是 **npm**(`npm i -g @zhoujw0725/openerp-cli`)。npm 包是个壳,安装时按平台从
 **GitHub Releases** 下载原生二进制——所以一次发布 = 先出 GitHub Release(二进制),再发 npm 包。
 两步都由 **打 tag** 自动完成(GitHub Actions,见 `.github/workflows/release.yml`)。
 
@@ -19,7 +19,7 @@ git push origin v0.1.0              # 打标签即触发发布
 1. `go test` → `goreleaser release`:在 GitHub Releases 发布 darwin/linux/windows × amd64/arm64 归档 + checksums。
 2. 把 `npm/package.json` 版本同步为 `0.1.0`,`npm publish --access public` 发布到公共 npm(需 NPM_TOKEN)。
 
-用户随后:`npm i -g @xiaowen-0725/openerp-cli`(postinstall 自动下载对应平台二进制 + 同步技能)。
+用户随后:`npm i -g @zhoujw0725/openerp-cli`(postinstall 自动下载对应平台二进制 + 同步技能)。
 
 ## 手动发 npm(不走 CI,或 CI 未配 NPM_TOKEN 时)
 GitHub Release v0.1.0 已存在的前提下,本地直接发对应版本的 npm 壳包:
