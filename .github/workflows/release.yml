@@ -2,7 +2,7 @@ name: release
 
 # 打 v* 标签即触发:
 #   1) goreleaser 构建多平台二进制并发布到 GitHub Releases(npm 包安装时从这里下载)
-#   2) 发布 npm 包 @zhoujw0725/openerp-cli(版本与 tag 同步;需仓库配置 NPM_TOKEN secret)
+#   2) 发布 npm 包 @openydt/openerp-cli(版本与 tag 同步;需仓库配置 NPM_TOKEN secret)
 on:
   push:
     tags: ["v*"]

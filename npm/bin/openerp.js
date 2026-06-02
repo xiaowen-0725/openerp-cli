@@ -7,7 +7,7 @@ const fs = require("fs");
 const binName = process.platform === "win32" ? "openerp-bin.exe" : "openerp-bin";
 const bin = path.join(__dirname, binName);
 if (!fs.existsSync(bin)) {
-  console.error("[openerp] 未找到二进制, 请重新安装: npm i -g @zhoujw0725/openerp-cli");
+  console.error("[openerp] 未找到二进制, 请重新安装: npm i -g @openydt/openerp-cli");
   process.exit(1);
 }
 const r = spawnSync(bin, process.argv.slice(2), { stdio: "inherit" });

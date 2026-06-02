@@ -7,7 +7,7 @@
 
 ## 安装
 ```bash
-npm i -g @zhoujw0725/openerp-cli   # 跨平台;postinstall 按平台下载原生二进制 + 同步技能到本机各 agent
+npm i -g @openydt/openerp-cli   # 跨平台;postinstall 按平台下载原生二进制 + 同步技能到本机各 agent
 openerp --help
 ```
 或从源码构建：`make build`（产物 `bin/openerp`）。发布流程见 [`RELEASING.md`](RELEASING.md)。

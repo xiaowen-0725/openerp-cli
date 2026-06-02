@@ -1,9 +1,9 @@
-# @zhoujw0725/openerp-cli
+# @openydt/openerp-cli
 
 金蝶云·星空 (Kingdee K3 Cloud) ERP CLI —— 为人和 AI Agent 而生。只读查询：BOM/物料/采购/销售/库存/生产等 + 对象发现层 + 对象经验沉淀。
 
 ```bash
-npm i -g @zhoujw0725/openerp-cli
+npm i -g @openydt/openerp-cli
 openerp --help
 ```
 
