@@ -13,10 +13,12 @@ metadata:
 > 先读 [`../openerp-shared/SKILL.md`](../openerp-shared/SKILL.md)。没覆盖的对象走 [`../openerp-discovery/SKILL.md`](../openerp-discovery/SKILL.md)。
 
 每个对象统一两个子命令：
-- `openerp <domain> <object> list [过滤] [--top N] [--page-all] [--format json|table|csv]`
-- `openerp <domain> <object> view --number <编号>`（按单据编号/编码看单条）
+- `openerp <domain> <object> list [过滤] [--top N] [--page-all] [--format json|table|csv]` —— **交易单据为单据级（每单一行，不展开分录）**
+- `openerp <domain> <object> view --number <编号>` —— **看单条完整明细（含分录行）**
 
-所有对象均已对真实实例联调通过（list 默认字段可直接返回数据）。`list` 不带过滤即取前若干行；`--jq` 可裁剪输出。
+所有对象均已对真实实例联调通过。要看某单的物料/数量等分录明细，用 `view`。
+**少数对象 list 本身就是明细/余额级（每行一个物料）**：`purchase price`(价目)、`inventory balance`(即时库存)、`production ppbom` / `subcontract ppbom`(用料清单)、`production mo`(生产订单产品)、`plan planorder`(计划)、`engineering route`(工艺路线)。
+`list` 不带过滤即取前若干行；`--jq` 可裁剪；超过 ~2000 行用 `--page-all`。
 
 ## 命令清单（domain object → FormId）
 
