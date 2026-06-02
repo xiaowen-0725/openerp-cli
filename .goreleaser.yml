@@ -12,7 +12,7 @@ builds:
     env:
       - CGO_ENABLED=0
     ldflags:
-      - -s -w -X github.com/xiaowen-0725/openerp-cli/cmd.Version={{.Version}}
+      - -s -w -X github.com/xiaowen-0725/openerp-cli/cmd/version.Version={{.Version}}
     goos:
       - darwin
       - linux

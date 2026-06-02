@@ -12,7 +12,8 @@ GOPROXY=off go build ./...   # 离线可构建（依赖仅 spf13/cobra，已缓�
 ## 分发 / 发布（详见 `RELEASING.md`）
 - 用户经 npm 安装 **`@openydt/openerp-cli`**（`npm/` 壳包）：postinstall 按平台从 GitHub Releases 下原生二进制 + best-effort `npx skills add xiaowen-0725/openerp-cli` 同步技能。
 - **打 `v*` tag** → `.github/workflows/release.yml`：`goreleaser`(`.goreleaser.yml`) 构建 darwin/linux/windows × amd64/arm64 归档发 GitHub Release，再（有 `NPM_TOKEN` secret 时）`npm publish --access public`。
-- 版本经 `-ldflags -X github.com/xiaowen-0725/openerp-cli/cmd.Version` 注入；本地 `make build` 默认 `0.1.0-poc`。npm 包 `version` 必须 == 已发布的 `v<version>` Release，否则 postinstall 下载 404。
+- 版本经 `-ldflags -X github.com/xiaowen-0725/openerp-cli/cmd/version.Version` 注入（源在 leaf 包 `cmd/version`，避免自更新逻辑 import 循环）；本地 `make build` 默认 `0.1.0-poc`。npm 包 `version` 必须 == 已发布的 `v<version>` Release，否则 postinstall 下载 404。
+- **自动更新在 `internal/selfupdate/`**：root 的 `PersistentPreRun` 每天静默自检 GitHub Releases `latest`，有新版则 fork 脱离会话的子进程(`openerp __selfupdate-apply <ver>`)下载→校验 `checksums.txt` SHA256→原子替换当前二进制，下次启动生效（stdout 的 JSON 契约绝不被触碰）。`openerp update [--check]` 是显式入口。dev 构建(`-poc` 等带后缀)与 `OPENERP_NO_UPDATE=1`/`--no-update-check` 时关闭；无写权限(全局安装)时静默放弃，显式命令回退提示 `npm i`。
 
 ## 架构速览
 - 入口 `main.go` → `cmd.Execute()`：建 Factory、跑 cobra、用 `output.EmitError` 把 `errs.*` 错误渲染为 JSON 信封 + 退出码。

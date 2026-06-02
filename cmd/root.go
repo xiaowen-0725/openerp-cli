@@ -14,13 +14,18 @@ import (
 	objectscmd "github.com/xiaowen-0725/openerp-cli/cmd/objects"
 	querycmd "github.com/xiaowen-0725/openerp-cli/cmd/query"
 	schemacmd "github.com/xiaowen-0725/openerp-cli/cmd/schema"
+	updatecmd "github.com/xiaowen-0725/openerp-cli/cmd/update"
+	versionpkg "github.com/xiaowen-0725/openerp-cli/cmd/version"
 	"github.com/xiaowen-0725/openerp-cli/errs"
 	"github.com/xiaowen-0725/openerp-cli/internal/cmdutil"
 	"github.com/xiaowen-0725/openerp-cli/internal/output"
+	"github.com/xiaowen-0725/openerp-cli/internal/selfupdate"
 )
 
-// Version is the CLI version (overridable via -ldflags).
-var Version = "0.1.0-poc"
+// Version is the CLI version. Source of truth lives in cmd/version (a leaf
+// package the self-updater can import without a cycle); kept here for any
+// existing reference.
+var Version = versionpkg.Version
 
 // NewRootCmd builds the root command and binds global flags onto f.
 func NewRootCmd(f *cmdutil.Factory) *cobra.Command {
@@ -30,6 +35,14 @@ func NewRootCmd(f *cmdutil.Factory) *cobra.Command {
 		Version:       Version,
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		// Throttled, silent background self-update (once/day). Skips the updater's
+		// own commands so it never recurses; honors --no-update-check / OPENERP_NO_UPDATE.
+		PersistentPreRun: func(c *cobra.Command, _ []string) {
+			if f.NoUpdateCheck || isUpdaterCommand(c) {
+				return
+			}
+			selfupdate.MaybeBackgroundUpdate(Version)
+		},
 		Long: `openerp 把金蝶云·星空(K3 Cloud)的接口封装成命令行工具。
 本轮为只读 POC：自动处理 LoginBySign 鉴权与 session 复用,多 profile 凭据管理。
 
@@ -48,6 +61,7 @@ func NewRootCmd(f *cmdutil.Factory) *cobra.Command {
 	pf.BoolVar(&f.DryRun, "dry-run", false, "只打印将发送的请求,不实际发送")
 	pf.BoolVarP(&f.Verbose, "verbose", "v", false, "调试日志输出到 stderr")
 	pf.BoolVar(&f.ReadOnly, "read-only", false, "只读模式(本轮命令均只读)")
+	pf.BoolVar(&f.NoUpdateCheck, "no-update-check", false, "禁用本次运行的自动更新检查(等价 OPENERP_NO_UPDATE=1)")
 
 	root.AddCommand(
 		configcmd.New(f),
@@ -57,6 +71,8 @@ func NewRootCmd(f *cmdutil.Factory) *cobra.Command {
 		schemacmd.New(f),
 		querycmd.New(f),
 		bomcmd.New(f),
+		updatecmd.New(f),
+		updatecmd.NewHidden(f),
 	)
 	// Catalog-driven domain command groups (base/purchase/sales/inventory/...).
 	if domainCmds, err := f.DomainCommands(); err == nil {
@@ -70,6 +86,16 @@ func NewRootCmd(f *cmdutil.Factory) *cobra.Command {
 		installUnknownSubcommandGuard(child)
 	}
 	return root
+}
+
+// isUpdaterCommand reports whether c is the explicit/hidden update path, where a
+// background self-update check would be redundant or recursive.
+func isUpdaterCommand(c *cobra.Command) bool {
+	switch c.Name() {
+	case "update", "__selfupdate-apply", "version", "help":
+		return true
+	}
+	return false
 }
 
 func installUnknownSubcommandGuard(cmd *cobra.Command) {

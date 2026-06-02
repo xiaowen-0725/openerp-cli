@@ -14,13 +14,14 @@ type Factory struct {
 	IOStreams *IOStreams
 
 	// Global flags (bound on the root command's persistent flag set).
-	Profile  string
-	Env      string // reserved (instance URL is per-profile, not per-env)
-	Format   string
-	Jq       string
-	DryRun   bool
-	Verbose  bool
-	ReadOnly bool
+	Profile       string
+	Env           string // reserved (instance URL is per-profile, not per-env)
+	Format        string
+	Jq            string
+	DryRun        bool
+	Verbose       bool
+	ReadOnly      bool
+	NoUpdateCheck bool
 }
 
 // NewFactory builds the default production factory.

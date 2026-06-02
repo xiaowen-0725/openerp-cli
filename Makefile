@@ -1,6 +1,6 @@
 BINARY  := bin/openerp
 VERSION ?= 0.1.0-poc
-LDFLAGS := -X github.com/xiaowen-0725/openerp-cli/cmd.Version=$(VERSION)
+LDFLAGS := -X github.com/xiaowen-0725/openerp-cli/cmd/version.Version=$(VERSION)
 
 .PHONY: build vet fmt-check unit-test test clean help
 
