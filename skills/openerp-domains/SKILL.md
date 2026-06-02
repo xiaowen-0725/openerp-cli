@@ -1,7 +1,7 @@
 ---
 name: openerp-domains
 version: 0.1.0
-description: "openerp 领域查询命令总览：基础资料/采购/销售/库存(含即时库存)/生产/委外/计划/工程/车间/成本 共 10 域 40 个对象的人性化只读查询命令(list/view)。查这些高频业务对象时优先用本技能。"
+description: "openerp 领域查询命令总览：基础资料/采购/销售/库存(含即时库存)/生产/委外/计划/工程/车间/成本 共 10 域 39 个对象的人性化只读查询命令(list/view)。查这些高频业务对象时优先用本技能。"
 metadata:
   requires:
     bins: ["openerp"]

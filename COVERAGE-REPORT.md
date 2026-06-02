@@ -10,7 +10,7 @@
 
 本报告的可行性结论已落地为可运行命令，并修正两处边界：
 
-- **已实现**：发现层（`objects`/`schema`）+ catalog 驱动领域命令 **10 域 40 对象**（base/purchase/sales/inventory/production/subcontract/plan/engineering/**workshop**/costing），每个 `list`+`view`，全部对真实实例 live-verified。
+- **已实现**：发现层（`objects`/`schema`）+ catalog 驱动领域命令 **10 域 39 对象**（base/purchase/sales/inventory/production/subcontract/plan/engineering/**workshop**/costing），每个 `list`+`view`，全部对真实实例 live-verified。
 - **即时库存现量——已解决（推翻下文 §五 5.1）**：正确对象是 **`STK_Inventory`（现存量余额）**，并非 `STK_InventoryQuery`；可经通用 `ExecuteBillQuery` 查询，返回真实分仓库存。已封装为 `openerp inventory balance list --material <编码>`。
 - **车间管理——已补**：`workshop process`（工序 PLM_STD_PROCESS）、`workshop in-output`（车间投入产出 CB_SFCINOUTPUTBILL，本实例暂无数据）；车间成本计算 `CB_SFCCostCalBill` 无字段模型，不可查。
 - **仍为待办专项**：**报表/账表（GetSysReportData）**——如“销售订单执行明细表”等模型 900 对象，需专门设计每张报表的参数方案；当前可用对应单据明细（如 `SAL_OUTSTOCK`）复现。
