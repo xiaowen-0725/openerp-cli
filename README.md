@@ -45,6 +45,7 @@ openerp query --form-id PUR_PriceCategory \
 ## 给 AI Agent
 - 输出契约见 [`AGENTS.md`](AGENTS.md)：结构化错误信封、退出码、stdout=数据/stderr=其它。
 - Skills：[`skills/openerp-shared`](skills/openerp-shared/SKILL.md)（基座，先读）、[`skills/openerp-bom`](skills/openerp-bom/SKILL.md)（领域）。
+- **对象经验沉淀**（对标 `eze-is/web-access` 站点经验）：按 K3 对象 FormId 把已验证的字段/过滤/陷阱/锚点存到 `~/.config/openerp/object-notes/{FormId}.{profile}.md`，agent 查询前回忆、查通后沉淀，跨 session 复用。纯文件约定（零 Go 代码）、只读不存 PII、按 profile 隔离。规范见 [`skills/openerp-shared/references/object-notes.md`](skills/openerp-shared/references/object-notes.md)。
 
 ## 开发
 ```bash

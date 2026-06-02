@@ -30,6 +30,8 @@ openerp query --form-id SAL_SaleOrder \
   --filter "FBillNo='XSDD000006'" --top 20
 ```
 
+> **发现前先回忆、发现后即沉淀**：三步发现前先 `ls ~/.config/openerp/object-notes/` 看该 FormId 有无既往经验；查通后把已验证的字段/过滤/陷阱写回 `object-notes/{FormId}.{profile}.md`。约定见 [`../openerp-shared/SKILL.md`](../openerp-shared/SKILL.md) §6「对象经验」。
+
 ## 关键规则（实测坐实，务必遵守）
 - **字段 key 不要带 entry/分录前缀。** ExecuteBillQuery 把表头与分录字段拉平在同一命名空间：用分录字段就直接写它的 key（如 `FMaterialId`、`FQty`），**不要**写 `FEntity.FMaterialId` / `FSaleOrderEntry.FQty`（会报“标识为 FEntity 的字段不存在”）。
 - **关联字段用点号下钻**：`FSupplierId.FName`、`FMaterialId.FNumber`、`FCustId.FNumber`。`schema` 输出里字段的 `lookUpForm` 非空即表示它是关联字段，可点号取关联对象的字段。

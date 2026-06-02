@@ -30,3 +30,4 @@ GOPROXY=off go build ./...   # 离线可构建（依赖仅 spf13/cobra，已缓�
 
 ## 验证锚点（联调）
 物料 `4.50.20.1549` 采购价 ≈ 9.318584（未税）/ 10.53（含税）/ 13% 税率 —— 与 Python `VERIFY_ANCHOR` 一致。
+此锚点也是「对象经验」层的种子示例：写在 `~/.config/openerp/object-notes/PUR_PriceCategory.{profile}.md` 的 `验证锚点` 小节（规范见 `skills/openerp-shared/references/object-notes.md`）。
