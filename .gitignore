@@ -1,0 +1,6 @@
+/bin/
+# Session caches contain a bearer token — never commit them.
+session-*.json
+# Never commit real credentials.
+*.local
+.env

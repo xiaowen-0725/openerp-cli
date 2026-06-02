@@ -1,0 +1,92 @@
+// Package cmd assembles the openerp root command and dispatches errors through
+// the typed-error → exit-code contract.
+package cmd
+
+import (
+	"fmt"
+
+	"github.com/spf13/cobra"
+
+	authcmd "github.com/zhoujw/openerp-cli/cmd/auth"
+	bomcmd "github.com/zhoujw/openerp-cli/cmd/bom"
+	configcmd "github.com/zhoujw/openerp-cli/cmd/config"
+	doctorcmd "github.com/zhoujw/openerp-cli/cmd/doctor"
+	querycmd "github.com/zhoujw/openerp-cli/cmd/query"
+	"github.com/zhoujw/openerp-cli/errs"
+	"github.com/zhoujw/openerp-cli/internal/cmdutil"
+	"github.com/zhoujw/openerp-cli/internal/output"
+)
+
+// Version is the CLI version (overridable via -ldflags).
+var Version = "0.1.0-poc"
+
+// NewRootCmd builds the root command and binds global flags onto f.
+func NewRootCmd(f *cmdutil.Factory) *cobra.Command {
+	root := &cobra.Command{
+		Use:           "openerp",
+		Short:         "金蝶云·星空 ERP CLI —— 为人和 AI Agent 而生",
+		Version:       Version,
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		Long: `openerp 把金蝶云·星空(K3 Cloud)的接口封装成命令行工具。
+本轮为只读 POC：自动处理 LoginBySign 鉴权与 session 复用,多 profile 凭据管理。
+
+常用:
+  openerp config set --profile prod --server-url ... --acct-id ... --user ... --app-id ... --app-secret ...
+  openerp doctor                                       # 自检:配置/登录/查询
+  openerp auth test                                    # 验证凭据
+  openerp query --form-id ENG_BOM --fields "FNumber" --filter "FMATERIALID.FNumber='1.30.67.0132'"`,
+	}
+
+	pf := root.PersistentFlags()
+	pf.StringVar(&f.Profile, "profile", "", "凭据 profile 名(默认当前 profile)")
+	pf.StringVar(&f.Env, "env", "", "环境(预留;星空实例 URL 随 profile 固定)")
+	pf.StringVar(&f.Format, "format", "json", "输出格式 json|ndjson|table|csv")
+	pf.StringVarP(&f.Jq, "jq", "q", "", "jq 路径子集(如 .data / .data[0] / .data.FName)")
+	pf.BoolVar(&f.DryRun, "dry-run", false, "只打印将发送的请求,不实际发送")
+	pf.BoolVarP(&f.Verbose, "verbose", "v", false, "调试日志输出到 stderr")
+	pf.BoolVar(&f.ReadOnly, "read-only", false, "只读模式(本轮命令均只读)")
+
+	root.AddCommand(
+		configcmd.New(f),
+		authcmd.New(f),
+		doctorcmd.New(f),
+		querycmd.New(f),
+		bomcmd.New(f),
+	)
+
+	// Pure groups (no Run) should error on a missing/unknown subcommand instead
+	// of silently printing help (larksuite/cli pattern). Root keeps cobra's
+	// default help-on-no-args behavior.
+	for _, child := range root.Commands() {
+		installUnknownSubcommandGuard(child)
+	}
+	return root
+}
+
+func installUnknownSubcommandGuard(cmd *cobra.Command) {
+	if cmd.HasSubCommands() && cmd.Run == nil && cmd.RunE == nil {
+		cmd.RunE = func(c *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				return errs.NewValidation(fmt.Sprintf("%q 需要一个子命令", c.CommandPath()),
+					"运行 `"+c.CommandPath()+" --help` 查看可用子命令", "")
+			}
+			return errs.NewValidation(fmt.Sprintf("%s 下没有子命令 %q", c.CommandPath(), args[0]),
+				"运行 `"+c.CommandPath()+" --help` 查看可用子命令", "")
+		}
+	}
+	for _, ch := range cmd.Commands() {
+		installUnknownSubcommandGuard(ch)
+	}
+}
+
+// Execute runs the CLI and returns a process exit code.
+func Execute() int {
+	f := cmdutil.NewFactory()
+	root := NewRootCmd(f)
+	err := root.Execute()
+	if err == nil {
+		return output.ExitOK
+	}
+	return output.EmitError(f.IOStreams.Err, err)
+}
