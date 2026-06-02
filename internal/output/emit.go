@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/zhoujw/openerp-cli/errs"
+	"github.com/xiaowen-0725/openerp-cli/errs"
 )
 
 // PendingNotice, if set, returns the system "_notice" map to inject into success

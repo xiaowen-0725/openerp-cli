@@ -1,4 +1,4 @@
-module github.com/zhoujw/openerp-cli
+module github.com/xiaowen-0725/openerp-cli
 
 go 1.23.0
 

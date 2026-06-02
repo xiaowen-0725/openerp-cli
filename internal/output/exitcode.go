@@ -1,6 +1,6 @@
 package output
 
-import "github.com/zhoujw/openerp-cli/errs"
+import "github.com/xiaowen-0725/openerp-cli/errs"
 
 // Shell exit codes. Fine-grained classes are carried in the JSON envelope's
 // "type" field, not the exit code (many categories map to one code).

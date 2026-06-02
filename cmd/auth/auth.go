@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/zhoujw/openerp-cli/internal/cmdutil"
+	"github.com/xiaowen-0725/openerp-cli/internal/cmdutil"
 )
 
 // New builds the `auth` command group.

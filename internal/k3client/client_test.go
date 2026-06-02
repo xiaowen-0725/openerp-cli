@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/zhoujw/openerp-cli/errs"
+	"github.com/xiaowen-0725/openerp-cli/errs"
 )
 
 func newTestClient(serverURL string) *Client {

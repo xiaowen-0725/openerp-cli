@@ -7,14 +7,14 @@ import (
 
 	"github.com/spf13/cobra"
 
-	authcmd "github.com/zhoujw/openerp-cli/cmd/auth"
-	bomcmd "github.com/zhoujw/openerp-cli/cmd/bom"
-	configcmd "github.com/zhoujw/openerp-cli/cmd/config"
-	doctorcmd "github.com/zhoujw/openerp-cli/cmd/doctor"
-	querycmd "github.com/zhoujw/openerp-cli/cmd/query"
-	"github.com/zhoujw/openerp-cli/errs"
-	"github.com/zhoujw/openerp-cli/internal/cmdutil"
-	"github.com/zhoujw/openerp-cli/internal/output"
+	authcmd "github.com/xiaowen-0725/openerp-cli/cmd/auth"
+	bomcmd "github.com/xiaowen-0725/openerp-cli/cmd/bom"
+	configcmd "github.com/xiaowen-0725/openerp-cli/cmd/config"
+	doctorcmd "github.com/xiaowen-0725/openerp-cli/cmd/doctor"
+	querycmd "github.com/xiaowen-0725/openerp-cli/cmd/query"
+	"github.com/xiaowen-0725/openerp-cli/errs"
+	"github.com/xiaowen-0725/openerp-cli/internal/cmdutil"
+	"github.com/xiaowen-0725/openerp-cli/internal/output"
 )
 
 // Version is the CLI version (overridable via -ldflags).

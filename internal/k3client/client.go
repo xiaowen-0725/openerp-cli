@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zhoujw/openerp-cli/errs"
+	"github.com/xiaowen-0725/openerp-cli/errs"
 )
 
 // Config builds a Client.

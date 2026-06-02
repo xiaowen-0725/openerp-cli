@@ -4,7 +4,7 @@ package main
 import (
 	"os"
 
-	"github.com/zhoujw/openerp-cli/cmd"
+	"github.com/xiaowen-0725/openerp-cli/cmd"
 )
 
 func main() {

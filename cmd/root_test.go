@@ -5,7 +5,7 @@ import (
 	"io"
 	"testing"
 
-	"github.com/zhoujw/openerp-cli/internal/cmdutil"
+	"github.com/xiaowen-0725/openerp-cli/internal/cmdutil"
 )
 
 func TestRootHelp(t *testing.T) {

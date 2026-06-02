@@ -4,8 +4,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/zhoujw/openerp-cli/internal/config"
-	"github.com/zhoujw/openerp-cli/internal/k3client"
+	"github.com/xiaowen-0725/openerp-cli/internal/config"
+	"github.com/xiaowen-0725/openerp-cli/internal/k3client"
 )
 
 // Factory carries global flags and lazily builds shared dependencies. Every

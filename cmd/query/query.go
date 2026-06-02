@@ -5,9 +5,9 @@ package query
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/zhoujw/openerp-cli/errs"
-	"github.com/zhoujw/openerp-cli/internal/cmdutil"
-	"github.com/zhoujw/openerp-cli/internal/k3client"
+	"github.com/xiaowen-0725/openerp-cli/errs"
+	"github.com/xiaowen-0725/openerp-cli/internal/cmdutil"
+	"github.com/xiaowen-0725/openerp-cli/internal/k3client"
 )
 
 // New builds the `query` command.

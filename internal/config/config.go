@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/zhoujw/openerp-cli/errs"
+	"github.com/xiaowen-0725/openerp-cli/errs"
 )
 
 // DefaultLCID is K3's culture id for Simplified Chinese.
