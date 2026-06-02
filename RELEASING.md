@@ -31,6 +31,6 @@ npm publish --access public
 ```
 
 ## 备注
-- 包名作用域 `@xiaowen-0725`:scoped 包发布必须带 `--access public`(package.json 已含 `publishConfig.access=public`)。
+- 包名作用域 `@zhoujw0725`(npm 账号名):scoped 包发布必须带 `--access public`(package.json 已含 `publishConfig.access=public`)。
 - 二进制版本号由 tag 注入(`-ldflags -X .../cmd.Version`);本地 `make build` 默认是 `0.1.0-poc`。
 - npm 包 `version` 必须与已发布的 GitHub Release tag(`v<version>`)一致,否则 postinstall 下载 404。
