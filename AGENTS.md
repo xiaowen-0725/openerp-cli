@@ -33,9 +33,9 @@ make unit-test    # 仅单测
 | 路径 | 职责 |
 |------|------|
 | `cmd/root.go` | 装配根命令、全局 flag、纯分组守卫、退出码路由 |
-| `cmd/{config,auth,doctor,query,bom}/` | 各命令 |
+| `cmd/{config,auth,doctor,objects,schema,query,bom}/` | 各命令；领域命令由 catalog 数据驱动(`cmdutil/domaincmd.go` ← `internal/catalog/domains.json`，10 域/39 对象) |
 | `internal/cmdutil/factory.go` | Factory(依赖注入) + IOStreams + `Config()`/`Client()` |
-| `internal/cmdutil/run.go` | `RunBillQuery`/`RunView`：dry-run、分页、信封渲染的共享路径 |
+| `internal/cmdutil/run.go` | `RunBillQuery`/`RunView`/`RunBusinessInfo`：dry-run、分页、聚合(`--sum`/`--group-by`)、信封渲染的共享路径 |
 | `internal/config/` | profile 凭据存储(0600)、env 覆盖、`Resolve` |
 | `internal/k3client/` | **K3 鉴权内核**：LoginBySign 签名、`china_to_unicode`、session 复用、失效重登、ExecuteBillQuery/View |
 | `internal/output/` | Envelope、退出码、json/ndjson/table/csv 渲染、jq 子集、错误信封 |
@@ -45,6 +45,10 @@ make unit-test    # 仅单测
 - 行为变更必须带测试。签名/编码这类纯函数有固定向量单测（`sha256SortedSign`、`chinaToUnicode`、dry-run wire golden）。
 - 用 `t.Setenv("OPENERP_CONFIG_DIR", t.TempDir())` 隔离配置。
 - 网络逻辑用 `httptest`（见 `k3client/client_test.go` 的失效重登测试）；**真实实例联调不进 CI**（无凭据）。
+
+## 分发 / SKILL 约定
+- 用户经 npm `@openydt/openerp-cli` 安装（`npm/` 壳包按平台下载 GitHub Release 二进制 + `npx skills` 同步技能）；打 `v*` tag 触发 `.github/workflows/release.yml`（goreleaser + npm publish）。详见 `RELEASING.md`。
+- **对象经验沉淀 / 未配置引导是 SKILL.md 行为约定，非 Go 代码**：见 `skills/openerp-shared/SKILL.md` §6（对象经验）/§0（未配置引导）。CLI 侧只负责输出结构化错误 + 可执行 hint（如 `type=configuration`），由 agent 据此引导，零 Go 改动。
 
 ## 提交
 - Conventional Commits：`feat: / fix: / docs: / test: / refactor: / chore:`。

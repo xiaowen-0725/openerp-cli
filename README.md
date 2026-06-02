@@ -3,7 +3,8 @@
 金蝶云·星空 (Kingdee K3 Cloud) ERP CLI —— 为人和 AI Agent 而生。
 
 > **可行性 POC（只读）**。打通「配置凭据 → LoginBySign 鉴权 → 真实只读查询 → 干净 JSON → agent 经 SKILL.md 消费」的端到端链路。
-> 写操作、代码生成、多领域命令、skillsync 等为后续阶段（见 `cmd` 注释与计划文档）。
+> 已落地：10 域/39 对象的领域命令、发现层(`objects`/`schema`)、客户端聚合(`--sum`/`--group-by`)、对象经验沉淀、未配置引导、npm 分发(goreleaser + CI)。
+> 后续阶段：**写操作**（走 `--yes/--read-only` 护栏）、**代码生成**（`cmd/gen`）。
 
 ## 安装
 ```bash
@@ -51,7 +52,8 @@ openerp query --form-id PUR_PriceCategory \
 
 ## 给 AI Agent
 - 输出契约见 [`AGENTS.md`](AGENTS.md)：结构化错误信封、退出码、stdout=数据/stderr=其它。
-- Skills：[`skills/openerp-shared`](skills/openerp-shared/SKILL.md)（基座，先读）、[`skills/openerp-bom`](skills/openerp-bom/SKILL.md)（领域）。
+- Skills（4 个，经 `npx skills` 同步到本机各 agent）：[`openerp-shared`](skills/openerp-shared/SKILL.md)（基座，**先读**）、[`openerp-discovery`](skills/openerp-discovery/SKILL.md)（发现层 objects→schema→query）、[`openerp-domains`](skills/openerp-domains/SKILL.md)（领域命令）、[`openerp-bom`](skills/openerp-bom/SKILL.md)（BOM）。
+- **未配置引导**：agent 遇 `type=configuration`（退出码 3）或无 profile 时，按 `openerp-shared` §0 友好逐项引导 `config set` → `doctor` → 回到用户原请求，而非直接抛原始报错。
 - **对象经验沉淀**（对标 `eze-is/web-access` 站点经验）：按 K3 对象 FormId 把已验证的字段/过滤/陷阱/锚点存到 `~/.config/openerp/object-notes/{FormId}.{profile}.md`，agent 查询前回忆、查通后沉淀，跨 session 复用。纯文件约定（零 Go 代码）、只读不存 PII、按 profile 隔离。规范见 [`skills/openerp-shared/references/object-notes.md`](skills/openerp-shared/references/object-notes.md)。
 
 ## 开发
