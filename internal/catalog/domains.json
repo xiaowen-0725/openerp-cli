@@ -1,0 +1,297 @@
+{
+  "domains": [
+    {
+      "name": "base",
+      "title": "基础资料",
+      "objects": [
+        { "name": "material", "title": "物料 (BD_MATERIAL)", "formId": "BD_MATERIAL", "numberField": "FNumber", "supportsView": true, "verified": true,
+          "defaultFields": ["FNumber", "FName", "FSpecification", "FDocumentStatus", "FForbidStatus"],
+          "filters": [
+            { "flag": "number", "template": "FNumber='{{.}}'", "desc": "物料编码精确匹配" },
+            { "flag": "keyword", "template": "FName like '%{{.}}%'", "desc": "名称模糊匹配" }
+          ] },
+        { "name": "customer", "title": "客户 (BD_Customer)", "formId": "BD_Customer", "numberField": "FNumber", "supportsView": true, "verified": true,
+          "defaultFields": ["FNumber", "FName", "FShortName", "FDocumentStatus"],
+          "filters": [
+            { "flag": "number", "template": "FNumber='{{.}}'", "desc": "客户编码" },
+            { "flag": "keyword", "template": "FName like '%{{.}}%'", "desc": "名称模糊" }
+          ] },
+        { "name": "supplier", "title": "供应商 (BD_Supplier)", "formId": "BD_Supplier", "numberField": "FNumber", "supportsView": true, "verified": true,
+          "defaultFields": ["FNumber", "FName", "FShortName", "FDocumentStatus"],
+          "filters": [
+            { "flag": "number", "template": "FNumber='{{.}}'", "desc": "供应商编码" },
+            { "flag": "keyword", "template": "FName like '%{{.}}%'", "desc": "名称模糊" }
+          ] },
+        { "name": "department", "title": "部门 (BD_Department)", "formId": "BD_Department", "numberField": "FNumber", "supportsView": true, "verified": true,
+          "defaultFields": ["FNumber", "FName", "FFullName"],
+          "filters": [
+            { "flag": "number", "template": "FNumber='{{.}}'", "desc": "部门编码" },
+            { "flag": "keyword", "template": "FName like '%{{.}}%'", "desc": "名称模糊" }
+          ] },
+        { "name": "stock", "title": "仓库 (BD_STOCK)", "formId": "BD_STOCK", "numberField": "FNumber", "supportsView": true, "verified": true,
+          "defaultFields": ["FNumber", "FName", "FDocumentStatus"],
+          "filters": [
+            { "flag": "number", "template": "FNumber='{{.}}'", "desc": "仓库编码" },
+            { "flag": "keyword", "template": "FName like '%{{.}}%'", "desc": "名称模糊" }
+          ] },
+        { "name": "employee", "title": "员工 (BD_Empinfo)", "formId": "BD_Empinfo", "numberField": "FNumber", "supportsView": true, "verified": true,
+          "defaultFields": ["FNumber", "FName", "FStaffNumber"],
+          "filters": [
+            { "flag": "number", "template": "FNumber='{{.}}'", "desc": "工号/编码" },
+            { "flag": "keyword", "template": "FName like '%{{.}}%'", "desc": "姓名模糊" }
+          ] }
+      ]
+    },
+    {
+      "name": "purchase",
+      "title": "采购管理",
+      "objects": [
+        { "name": "requisition", "title": "采购申请 (PUR_Requisition)", "formId": "PUR_Requisition", "numberField": "FBillNo", "supportsView": true, "verified": true,
+          "defaultFields": ["FBillNo", "FApplicationDate", "FDocumentStatus", "FMaterialId.FNumber", "FReqQty"],
+          "filters": [
+            { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" },
+            { "flag": "date-from", "template": "FApplicationDate>='{{.}}'", "desc": "申请起始日期" },
+            { "flag": "date-to", "template": "FApplicationDate<='{{.}}'", "desc": "申请截止日期" }
+          ] },
+        { "name": "order", "title": "采购订单 (PUR_PurchaseOrder)", "formId": "PUR_PurchaseOrder", "numberField": "FBillNo", "supportsView": true, "verified": true,
+          "defaultFields": ["FBillNo", "FDate", "FDocumentStatus", "FSupplierId.FNumber", "FSupplierId.FName", "FMaterialId.FNumber", "FQty"],
+          "filters": [
+            { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" },
+            { "flag": "supplier", "template": "FSupplierId.FNumber='{{.}}'", "desc": "供应商编码" },
+            { "flag": "date-from", "template": "FDate>='{{.}}'", "desc": "起始日期" },
+            { "flag": "date-to", "template": "FDate<='{{.}}'", "desc": "截止日期" }
+          ] },
+        { "name": "instock", "title": "采购入库 (STK_InStock)", "formId": "STK_InStock", "numberField": "FBillNo", "supportsView": true, "verified": true,
+          "defaultFields": ["FBillNo", "FDate", "FDocumentStatus", "FSupplierId.FName", "FMaterialId.FNumber", "FRealQty"],
+          "filters": [
+            { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" },
+            { "flag": "supplier", "template": "FSupplierId.FNumber='{{.}}'", "desc": "供应商编码" },
+            { "flag": "date-from", "template": "FDate>='{{.}}'", "desc": "起始日期" },
+            { "flag": "date-to", "template": "FDate<='{{.}}'", "desc": "截止日期" }
+          ] },
+        { "name": "return", "title": "采购退料 (PUR_MRB)", "formId": "PUR_MRB", "numberField": "FBillNo", "supportsView": true, "verified": true,
+          "defaultFields": ["FBillNo", "FDate", "FDocumentStatus", "FSupplierID.FName", "FMATERIALID.FNumber", "FREPLENISHQTY"],
+          "filters": [
+            { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" },
+            { "flag": "date-from", "template": "FDate>='{{.}}'", "desc": "起始日期" },
+            { "flag": "date-to", "template": "FDate<='{{.}}'", "desc": "截止日期" }
+          ] },
+        { "name": "price", "title": "采购价目 (PUR_PriceCategory)", "formId": "PUR_PriceCategory", "numberField": "FNumber", "supportsView": true, "verified": true,
+          "defaultFields": ["FNumber", "FName", "FSupplierID.FName", "FEffectiveDate", "FExpiryDate", "FMaterialId.FNumber", "FPrice", "FTaxPrice"],
+          "filters": [
+            { "flag": "number", "template": "FNumber='{{.}}'", "desc": "价目表编码" },
+            { "flag": "material", "template": "FMaterialId.FNumber='{{.}}'", "desc": "物料编码" }
+          ] }
+      ]
+    },
+    {
+      "name": "sales",
+      "title": "销售管理",
+      "objects": [
+        { "name": "order", "title": "销售订单 (SAL_SaleOrder)", "formId": "SAL_SaleOrder", "numberField": "FBillNo", "supportsView": true, "verified": true,
+          "defaultFields": ["FBillNo", "FDate", "FDocumentStatus", "FCustId.FNumber", "FCustId.FName", "FMaterialId.FNumber", "FQty"],
+          "filters": [
+            { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" },
+            { "flag": "customer", "template": "FCustId.FNumber='{{.}}'", "desc": "客户编码" },
+            { "flag": "date-from", "template": "FDate>='{{.}}'", "desc": "起始日期" },
+            { "flag": "date-to", "template": "FDate<='{{.}}'", "desc": "截止日期" }
+          ] },
+        { "name": "outstock", "title": "销售出库 (SAL_OUTSTOCK)", "formId": "SAL_OUTSTOCK", "numberField": "FBillNo", "supportsView": true, "verified": true,
+          "defaultFields": ["FBillNo", "FDate", "FDocumentStatus", "FCustomerID.FName", "FMaterialID.FNumber", "FRealQty"],
+          "filters": [
+            { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" },
+            { "flag": "date-from", "template": "FDate>='{{.}}'", "desc": "起始日期" },
+            { "flag": "date-to", "template": "FDate<='{{.}}'", "desc": "截止日期" }
+          ] },
+        { "name": "delivery", "title": "发货通知 (SAL_DELIVERYNOTICE)", "formId": "SAL_DELIVERYNOTICE", "numberField": "FBillNo", "supportsView": true, "verified": true,
+          "defaultFields": ["FBillNo", "FDate", "FDocumentStatus", "FCustomerID.FName", "FMaterialID.FNumber", "FQty"],
+          "filters": [
+            { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" },
+            { "flag": "date-from", "template": "FDate>='{{.}}'", "desc": "起始日期" },
+            { "flag": "date-to", "template": "FDate<='{{.}}'", "desc": "截止日期" }
+          ] },
+        { "name": "return", "title": "销售退货 (SAL_RETURNSTOCK)", "formId": "SAL_RETURNSTOCK", "numberField": "FBillNo", "supportsView": true, "verified": true,
+          "defaultFields": ["FBillNo", "FDate", "FDocumentStatus", "FRetcustId.FName", "FMaterialId.FNumber", "FRealQty"],
+          "filters": [
+            { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" },
+            { "flag": "date-from", "template": "FDate>='{{.}}'", "desc": "起始日期" },
+            { "flag": "date-to", "template": "FDate<='{{.}}'", "desc": "截止日期" }
+          ] },
+        { "name": "quote", "title": "销售报价 (SAL_QUOTATION)", "formId": "SAL_QUOTATION", "numberField": "FBillNo", "supportsView": true, "verified": true,
+          "defaultFields": ["FBillNo", "FDate", "FDocumentStatus", "FCUSTID.FName", "FMaterialId.FNumber", "FQty", "FPrice"],
+          "filters": [
+            { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" },
+            { "flag": "date-from", "template": "FDate>='{{.}}'", "desc": "起始日期" },
+            { "flag": "date-to", "template": "FDate<='{{.}}'", "desc": "截止日期" }
+          ] },
+        { "name": "returnnotice", "title": "退货通知 (SAL_RETURNNOTICE)", "formId": "SAL_RETURNNOTICE", "numberField": "FBillNo", "supportsView": true, "verified": true,
+          "defaultFields": ["FBillNo", "FDate", "FDocumentStatus", "FRetcustId.FName", "FMaterialId.FNumber", "FQty"],
+          "filters": [
+            { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" },
+            { "flag": "date-from", "template": "FDate>='{{.}}'", "desc": "起始日期" },
+            { "flag": "date-to", "template": "FDate<='{{.}}'", "desc": "截止日期" }
+          ] }
+      ]
+    },
+    {
+      "name": "inventory",
+      "title": "库存管理 (单据)",
+      "objects": [
+        { "name": "misc-in", "title": "其他入库 (STK_MISCELLANEOUS)", "formId": "STK_MISCELLANEOUS", "numberField": "FBillNo", "supportsView": true, "verified": true,
+          "defaultFields": ["FBillNo", "FDate", "FDocumentStatus", "FMATERIALID.FNumber", "FQty", "FSTOCKID.FName"],
+          "filters": [
+            { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" },
+            { "flag": "date-from", "template": "FDate>='{{.}}'", "desc": "起始日期" },
+            { "flag": "date-to", "template": "FDate<='{{.}}'", "desc": "截止日期" }
+          ] },
+        { "name": "misc-out", "title": "其他出库 (STK_MisDelivery)", "formId": "STK_MisDelivery", "numberField": "FBillNo", "supportsView": true, "verified": true,
+          "defaultFields": ["FBillNo", "FDate", "FDocumentStatus", "FMaterialId.FNumber", "FQty", "FStockId.FName"],
+          "filters": [
+            { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" },
+            { "flag": "date-from", "template": "FDate>='{{.}}'", "desc": "起始日期" },
+            { "flag": "date-to", "template": "FDate<='{{.}}'", "desc": "截止日期" }
+          ] },
+        { "name": "transfer", "title": "直接调拨 (STK_TransferDirect)", "formId": "STK_TransferDirect", "numberField": "FBillNo", "supportsView": true, "verified": true,
+          "defaultFields": ["FBillNo", "FDate", "FDocumentStatus", "FMaterialId.FNumber", "FQty", "FSrcStockId.FName", "FDestStockId.FName"],
+          "filters": [
+            { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" },
+            { "flag": "date-from", "template": "FDate>='{{.}}'", "desc": "起始日期" },
+            { "flag": "date-to", "template": "FDate<='{{.}}'", "desc": "截止日期" }
+          ] },
+        { "name": "transfer-apply", "title": "调拨申请 (STK_TransferApply)", "formId": "STK_TransferApply", "numberField": "FBillNo", "supportsView": true, "verified": true,
+          "defaultFields": ["FBillNo", "FDate", "FDocumentStatus", "FMATERIALID.FNumber", "FBASEQTY"],
+          "filters": [
+            { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" },
+            { "flag": "date-from", "template": "FDate>='{{.}}'", "desc": "起始日期" },
+            { "flag": "date-to", "template": "FDate<='{{.}}'", "desc": "截止日期" }
+          ] }
+      ]
+    },
+    {
+      "name": "production",
+      "title": "生产管理",
+      "objects": [
+        { "name": "mo", "title": "生产订单 (PRD_MO)", "formId": "PRD_MO", "numberField": "FBillNo", "supportsView": true, "verified": true,
+          "defaultFields": ["FBillNo", "FDocumentStatus", "FMaterialId.FNumber", "FQty"],
+          "filters": [
+            { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" }
+          ] },
+        { "name": "ppbom", "title": "生产用料清单 (PRD_PPBOM)", "formId": "PRD_PPBOM", "numberField": "FBillNo", "supportsView": true, "verified": true,
+          "defaultFields": ["FBillNo", "FDocumentStatus", "FMaterialID.FNumber", "FQty", "FMOBillNO"],
+          "filters": [
+            { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" },
+            { "flag": "mo", "template": "FMOBillNO='{{.}}'", "desc": "关联生产订单号" }
+          ] },
+        { "name": "pick", "title": "生产领料 (PRD_PICKMTRL)", "formId": "PRD_PICKMTRL", "numberField": "FBillNo", "supportsView": true, "verified": true,
+          "defaultFields": ["FBillNo", "FDate", "FDocumentStatus", "FMaterialId.FNumber", "FAppQty", "FActualQty"],
+          "filters": [
+            { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" },
+            { "flag": "date-from", "template": "FDate>='{{.}}'", "desc": "起始日期" },
+            { "flag": "date-to", "template": "FDate<='{{.}}'", "desc": "截止日期" }
+          ] },
+        { "name": "report", "title": "生产汇报 (PRD_MORPT)", "formId": "PRD_MORPT", "numberField": "FBillNo", "supportsView": true, "verified": true,
+          "defaultFields": ["FBillNo", "FDate", "FDocumentStatus", "FMaterialId.FNumber", "FFinishQty"],
+          "filters": [
+            { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" },
+            { "flag": "date-from", "template": "FDate>='{{.}}'", "desc": "起始日期" },
+            { "flag": "date-to", "template": "FDate<='{{.}}'", "desc": "截止日期" }
+          ] },
+        { "name": "instock", "title": "生产入库 (PRD_INSTOCK)", "formId": "PRD_INSTOCK", "numberField": "FBillNo", "supportsView": true, "verified": true,
+          "defaultFields": ["FBillNo", "FDate", "FDocumentStatus", "FMaterialId.FNumber", "FRealQty"],
+          "filters": [
+            { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" },
+            { "flag": "date-from", "template": "FDate>='{{.}}'", "desc": "起始日期" },
+            { "flag": "date-to", "template": "FDate<='{{.}}'", "desc": "截止日期" }
+          ] },
+        { "name": "return", "title": "生产退料 (PRD_ReturnMtrl)", "formId": "PRD_ReturnMtrl", "numberField": "FBillNo", "supportsView": true, "verified": true,
+          "defaultFields": ["FBillNo", "FDate", "FDocumentStatus", "FMaterialId.FNumber", "FQty"],
+          "filters": [
+            { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" },
+            { "flag": "date-from", "template": "FDate>='{{.}}'", "desc": "起始日期" },
+            { "flag": "date-to", "template": "FDate<='{{.}}'", "desc": "截止日期" }
+          ] }
+      ]
+    },
+    {
+      "name": "subcontract",
+      "title": "委外管理",
+      "objects": [
+        { "name": "order", "title": "委外订单 (SUB_SUBREQORDER)", "formId": "SUB_SUBREQORDER", "numberField": "FBillNo", "supportsView": true, "verified": true,
+          "defaultFields": ["FBillNo", "FDATE", "FDocumentStatus", "FMaterialId.FNumber", "FQty"],
+          "filters": [
+            { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" },
+            { "flag": "date-from", "template": "FDATE>='{{.}}'", "desc": "起始日期" },
+            { "flag": "date-to", "template": "FDATE<='{{.}}'", "desc": "截止日期" }
+          ] },
+        { "name": "ppbom", "title": "委外用料清单 (SUB_PPBOM)", "formId": "SUB_PPBOM", "numberField": "FBillNo", "supportsView": true, "verified": true,
+          "defaultFields": ["FBillNo", "FDocumentStatus", "FMaterialID.FNumber", "FQty", "FSupplierId.FName", "FSubReqBillNO"],
+          "filters": [
+            { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" }
+          ] },
+        { "name": "pick", "title": "委外领料 (SUB_PICKMTRL)", "formId": "SUB_PICKMTRL", "numberField": "FBillNo", "supportsView": true, "verified": true,
+          "defaultFields": ["FBillNo", "FDate", "FDocumentStatus", "FSupplierId.FName", "FMaterialId.FNumber", "FPrice"],
+          "filters": [
+            { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" },
+            { "flag": "date-from", "template": "FDate>='{{.}}'", "desc": "起始日期" },
+            { "flag": "date-to", "template": "FDate<='{{.}}'", "desc": "截止日期" }
+          ] },
+        { "name": "return", "title": "委外退料 (SUB_ReturnMtrl)", "formId": "SUB_ReturnMtrl", "numberField": "FBillNo", "supportsView": true, "verified": true,
+          "defaultFields": ["FBillNo", "FDate", "FDocumentStatus", "FMaterialId.FNumber", "FQty"],
+          "filters": [
+            { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" },
+            { "flag": "date-from", "template": "FDate>='{{.}}'", "desc": "起始日期" },
+            { "flag": "date-to", "template": "FDate<='{{.}}'", "desc": "截止日期" }
+          ] }
+      ]
+    },
+    {
+      "name": "plan",
+      "title": "计划管理",
+      "objects": [
+        { "name": "planorder", "title": "计划订单 (PLN_PLANORDER)", "formId": "PLN_PLANORDER", "numberField": "FBillNo", "supportsView": true, "verified": true,
+          "defaultFields": ["FBillNo", "FDocumentStatus", "FMaterialId.FNumber", "FOrderQty", "FDemandQty", "FDemandDate"],
+          "filters": [
+            { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" },
+            { "flag": "material", "template": "FMaterialId.FNumber='{{.}}'", "desc": "物料编码" }
+          ] },
+        { "name": "forecast", "title": "预测单 (PLN_FORECAST)", "formId": "PLN_FORECAST", "numberField": "FBillNo", "supportsView": true, "verified": true,
+          "defaultFields": ["FBillNo", "FDate", "FDocumentStatus", "FMaterialID.FNumber", "FQty"],
+          "filters": [
+            { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" },
+            { "flag": "date-from", "template": "FDate>='{{.}}'", "desc": "起始日期" },
+            { "flag": "date-to", "template": "FDate<='{{.}}'", "desc": "截止日期" }
+          ] }
+      ]
+    },
+    {
+      "name": "engineering",
+      "title": "工程数据",
+      "objects": [
+        { "name": "route", "title": "工艺路线 (ENG_Route)", "formId": "ENG_Route", "numberField": "FNumber", "supportsView": true, "verified": true,
+          "defaultFields": ["FNumber", "FName", "FMATERIALID.FNumber", "FDocumentStatus", "FEFFECTDATE"],
+          "filters": [
+            { "flag": "number", "template": "FNumber='{{.}}'", "desc": "工艺路线编码" },
+            { "flag": "material", "template": "FMATERIALID.FNumber='{{.}}'", "desc": "物料编码" }
+          ] },
+        { "name": "workcenter", "title": "工作中心 (ENG_WorkCenter)", "formId": "ENG_WorkCenter", "numberField": "FNumber", "supportsView": true, "verified": true,
+          "defaultFields": ["FNumber", "FName", "FDocumentStatus"],
+          "filters": [
+            { "flag": "number", "template": "FNumber='{{.}}'", "desc": "工作中心编码" },
+            { "flag": "keyword", "template": "FName like '%{{.}}%'", "desc": "名称模糊" }
+          ] }
+      ]
+    },
+    {
+      "name": "costing",
+      "title": "成本/核算",
+      "objects": [
+        { "name": "dimension", "title": "核算维度 (BD_FLEXITEMPROPERTY)", "formId": "BD_FLEXITEMPROPERTY", "numberField": "FNumber", "supportsView": true, "verified": true,
+          "defaultFields": ["FNumber", "FName", "FFlexNumber", "FDocumentStatus"],
+          "filters": [
+            { "flag": "number", "template": "FNumber='{{.}}'", "desc": "核算维度编码" },
+            { "flag": "keyword", "template": "FName like '%{{.}}%'", "desc": "名称模糊" }
+          ] }
+      ]
+    }
+  ]
+}

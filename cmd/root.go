@@ -11,7 +11,9 @@ import (
 	bomcmd "github.com/xiaowen-0725/openerp-cli/cmd/bom"
 	configcmd "github.com/xiaowen-0725/openerp-cli/cmd/config"
 	doctorcmd "github.com/xiaowen-0725/openerp-cli/cmd/doctor"
+	objectscmd "github.com/xiaowen-0725/openerp-cli/cmd/objects"
 	querycmd "github.com/xiaowen-0725/openerp-cli/cmd/query"
+	schemacmd "github.com/xiaowen-0725/openerp-cli/cmd/schema"
 	"github.com/xiaowen-0725/openerp-cli/errs"
 	"github.com/xiaowen-0725/openerp-cli/internal/cmdutil"
 	"github.com/xiaowen-0725/openerp-cli/internal/output"
@@ -51,9 +53,15 @@ func NewRootCmd(f *cmdutil.Factory) *cobra.Command {
 		configcmd.New(f),
 		authcmd.New(f),
 		doctorcmd.New(f),
+		objectscmd.New(f),
+		schemacmd.New(f),
 		querycmd.New(f),
 		bomcmd.New(f),
 	)
+	// Catalog-driven domain command groups (base/purchase/sales/inventory/...).
+	if domainCmds, err := f.DomainCommands(); err == nil {
+		root.AddCommand(domainCmds...)
+	}
 
 	// Pure groups (no Run) should error on a missing/unknown subcommand instead
 	// of silently printing help (larksuite/cli pattern). Root keeps cobra's

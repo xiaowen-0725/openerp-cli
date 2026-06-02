@@ -150,7 +150,7 @@ func (c *Client) Call(ctx context.Context, endpoint, parametersJSON string) ([]b
 	if err != nil {
 		return nil, err
 	}
-	if bytes.Contains(raw, []byte("登录")) {
+	if sessionExpired(raw) {
 		c.logf("session expired, re-login + retry once")
 		clearSessionFile(c.cfg.SessionPath)
 		c.session = ""
@@ -161,12 +161,20 @@ func (c *Client) Call(ctx context.Context, endpoint, parametersJSON string) ([]b
 		if err != nil {
 			return nil, err
 		}
-		if bytes.Contains(raw, []byte("登录")) {
+		if sessionExpired(raw) {
 			return nil, errs.NewAuth("重新登录后请求仍提示需登录",
 				"运行 `openerp auth test` 核对凭据", 0)
 		}
 	}
 	return raw, nil
+}
+
+// sessionExpired reports whether a raw response signals an expired/lost session.
+// It matches the specific phrase "重新登录" (and "会话信息已丢失") rather than the
+// bare "登录", because legitimate payloads — notably QueryBusinessInfo metadata —
+// can contain "登录" in field/permission labels and must not trigger a re-login.
+func sessionExpired(raw []byte) bool {
+	return bytes.Contains(raw, []byte("重新登录")) || bytes.Contains(raw, []byte("会话信息已丢失"))
 }
 
 // QueryArgs are the inputs to ExecuteBillQuery.
@@ -223,6 +231,106 @@ func BuildViewParams(formID, number string) string {
 // View fetches a single record by number.
 func (c *Client) View(ctx context.Context, formID, number string) ([]byte, error) {
 	return c.Call(ctx, EndpointView, BuildViewParams(formID, number))
+}
+
+type businessInfoReq struct {
+	FormId string `json:"FormId"`
+}
+
+// BuildBusinessInfoParams returns the `parameters` JSON string for a
+// QueryBusinessInfo call (an array with one JSON-string element) — the encoding
+// confirmed against the live instance.
+func BuildBusinessInfoParams(formID string) string {
+	inner, _ := json.Marshal(businessInfoReq{FormId: formID})
+	params, _ := json.Marshal([]string{string(inner)})
+	return string(params)
+}
+
+// QueryBusinessInfo returns a FormId's metadata (entries + queryable fields).
+func (c *Client) QueryBusinessInfo(ctx context.Context, formID string) ([]byte, error) {
+	return c.Call(ctx, EndpointQueryBusinessInfo, BuildBusinessInfoParams(formID))
+}
+
+// BusinessInfo is a compact view of a QueryBusinessInfo response.
+type BusinessInfo struct {
+	FormID  string          `json:"formId"`
+	Name    string          `json:"name,omitempty"`
+	Pk      string          `json:"pk,omitempty"`
+	Entries []BusinessEntry `json:"entries"`
+}
+
+// BusinessEntry is one entity (header or sub-entry) of a business object.
+type BusinessEntry struct {
+	Key    string          `json:"key"`
+	Name   string          `json:"name,omitempty"`
+	Table  string          `json:"table,omitempty"`
+	Fields []BusinessField `json:"fields"`
+}
+
+// BusinessField is one queryable field.
+type BusinessField struct {
+	Key        string `json:"key"`
+	Name       string `json:"name,omitempty"`
+	Type       int    `json:"type,omitempty"`
+	LookUpForm string `json:"lookUpForm,omitempty"`
+}
+
+type k3LangName struct {
+	Key   int    `json:"Key"`
+	Value string `json:"Value"`
+}
+
+func firstLangName(ns []k3LangName) string {
+	for _, n := range ns {
+		if n.Value != "" {
+			return n.Value
+		}
+	}
+	return ""
+}
+
+type biResp struct {
+	Result struct {
+		ResponseStatus struct {
+			IsSuccess bool `json:"IsSuccess"`
+		} `json:"ResponseStatus"`
+		NeedReturnData struct {
+			Id          string       `json:"Id"`
+			Name        []k3LangName `json:"Name"`
+			PkFieldName string       `json:"PkFieldName"`
+			Entrys      []struct {
+				Key       string       `json:"Key"`
+				Name      []k3LangName `json:"Name"`
+				TableName string       `json:"TableName"`
+				Fields    []struct {
+					Key                string       `json:"Key"`
+					Name               []k3LangName `json:"Name"`
+					FieldType          int          `json:"FieldType"`
+					LookUpObjectFormId string       `json:"LookUpObjectFormId"`
+				} `json:"Fields"`
+			} `json:"Entrys"`
+		} `json:"NeedReturnData"`
+	} `json:"Result"`
+}
+
+// ParseBusinessInfo extracts a compact field list from a raw QueryBusinessInfo response.
+func ParseBusinessInfo(raw []byte) (*BusinessInfo, error) {
+	var resp biResp
+	if err := json.Unmarshal(raw, &resp); err != nil {
+		return nil, err
+	}
+	d := resp.Result.NeedReturnData
+	bi := &BusinessInfo{FormID: d.Id, Name: firstLangName(d.Name), Pk: d.PkFieldName}
+	for _, e := range d.Entrys {
+		be := BusinessEntry{Key: e.Key, Name: firstLangName(e.Name), Table: e.TableName}
+		for _, f := range e.Fields {
+			be.Fields = append(be.Fields, BusinessField{
+				Key: f.Key, Name: firstLangName(f.Name), Type: f.FieldType, LookUpForm: f.LookUpObjectFormId,
+			})
+		}
+		bi.Entries = append(bi.Entries, be)
+	}
+	return bi, nil
 }
 
 // Prepared is what --dry-run prints: the request that would be sent (session masked).

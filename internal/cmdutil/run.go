@@ -89,6 +89,34 @@ func (f *Factory) RunView(ctx context.Context, formID, number string) error {
 	return output.EmitData(f.IOStreams.Out, f.Format, f.Jq, data, nil)
 }
 
+// RunBusinessInfo executes a QueryBusinessInfo (metadata/field discovery),
+// honoring --dry-run. When fieldsOnly is true it emits the compact parsed field
+// list; otherwise the full raw metadata. Used by `schema`.
+func (f *Factory) RunBusinessInfo(ctx context.Context, formID string, fieldsOnly bool) error {
+	c, err := f.Client()
+	if err != nil {
+		return err
+	}
+	if f.DryRun {
+		p := c.Prepare(k3client.EndpointQueryBusinessInfo, k3client.BuildBusinessInfoParams(formID))
+		return output.EmitData(f.IOStreams.Out, f.Format, f.Jq, p, nil)
+	}
+	raw, err := c.QueryBusinessInfo(ctx, formID)
+	if err != nil {
+		return err
+	}
+	data := decode(raw)
+	if apiErr := apiErrorIfAny(data); apiErr != nil {
+		return apiErr
+	}
+	if fieldsOnly {
+		if bi, perr := k3client.ParseBusinessInfo(raw); perr == nil {
+			return output.EmitData(f.IOStreams.Out, f.Format, f.Jq, bi, nil)
+		}
+	}
+	return output.EmitData(f.IOStreams.Out, f.Format, f.Jq, data, nil)
+}
+
 func decode(raw []byte) interface{} {
 	var v interface{}
 	if json.Unmarshal(raw, &v) == nil {

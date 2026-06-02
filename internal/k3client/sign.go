@@ -16,9 +16,10 @@ import (
 
 // WebAPI endpoint paths (appended to ServerURL, which ends in /K3Cloud/).
 const (
-	EndpointLoginBySign      = "Kingdee.BOS.WebApi.ServicesStub.AuthService.LoginBySign.common.kdsvc"
-	EndpointExecuteBillQuery = "Kingdee.BOS.WebApi.ServicesStub.DynamicFormService.ExecuteBillQuery.common.kdsvc"
-	EndpointView             = "Kingdee.BOS.WebApi.ServicesStub.DynamicFormService.View.common.kdsvc"
+	EndpointLoginBySign       = "Kingdee.BOS.WebApi.ServicesStub.AuthService.LoginBySign.common.kdsvc"
+	EndpointExecuteBillQuery  = "Kingdee.BOS.WebApi.ServicesStub.DynamicFormService.ExecuteBillQuery.common.kdsvc"
+	EndpointView              = "Kingdee.BOS.WebApi.ServicesStub.DynamicFormService.View.common.kdsvc"
+	EndpointQueryBusinessInfo = "Kingdee.BOS.WebApi.ServicesStub.DynamicFormService.QueryBusinessInfo.common.kdsvc"
 )
 
 // chinaToUnicode replaces every CJK rune in 0x4E00..0x29FA5 with a lower-case

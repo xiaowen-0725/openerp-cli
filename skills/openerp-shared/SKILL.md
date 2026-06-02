@@ -66,5 +66,8 @@ openerp query --form-id <FormId> --fields "<逗号分隔字段>" \
 `--format json|ndjson|table|csv`；`--jq` 支持路径子集 `. / .data / .data[0] / .data.FName`（非完整 jq）。
 `--dry-run` 打印将发送的请求（外层 body、endpoint、掩码 session），不发送 —— 排查签名/编码用。
 
-## 5. 领域命令
-人性化封装见各领域 skill（如 `openerp-bom`）；它们最终也走上面的 `query`/`View`。
+## 5. 发现层与领域命令
+- **发现任意对象**：`openerp objects --keyword <词>`（搜 FormId）+ `openerp schema <FormId> --fields-only`（查字段）→ 见 [`../openerp-discovery/SKILL.md`](../openerp-discovery/SKILL.md)。
+- **高频对象人性化命令**：基础资料/采购/销售/库存/生产/委外/计划/工程/成本 共 9 域 37 个对象，`openerp <domain> <object> list|view` → 见 [`../openerp-domains/SKILL.md`](../openerp-domains/SKILL.md)。BOM 见 [`../openerp-bom/SKILL.md`](../openerp-bom/SKILL.md)。
+- **关键**：通用查询的字段 key 不带分录前缀（用 `FMaterialId` 而非 `FEntity.FMaterialId`）；关联字段点号下钻（`FSupplierId.FName`）。
+- **不支持(需专用接口)**：即时库存现量 `STK_InventoryQuery`、报表/账表(模型900，如销售明细表，需 GetSysReportData)。
