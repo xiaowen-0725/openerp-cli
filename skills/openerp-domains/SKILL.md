@@ -1,7 +1,7 @@
 ---
 name: openerp-domains
 version: 0.1.0
-description: "openerp 领域查询命令总览：基础资料/采购/销售/库存/生产/委外/计划/工程/成本 共 9 域 37 个对象的人性化只读查询命令(list/view)。查这些高频业务对象时优先用本技能。"
+description: "openerp 领域查询命令总览：基础资料/采购/销售/库存(含即时库存)/生产/委外/计划/工程/车间/成本 共 10 域 40 个对象的人性化只读查询命令(list/view)。查这些高频业务对象时优先用本技能。"
 metadata:
   requires:
     bins: ["openerp"]
@@ -43,6 +43,7 @@ metadata:
 | `inventory misc-out` | 其他出库 | STK_MisDelivery | `--bill-no` `--date-from/-to` |
 | `inventory transfer` | 直接调拨 | STK_TransferDirect | `--bill-no` `--date-from/-to` |
 | `inventory transfer-apply` | 调拨申请 | STK_TransferApply | `--bill-no` `--date-from/-to` |
+| `inventory balance` | 即时库存现量 | STK_Inventory | `--material` `--stock` |
 | `production mo` | 生产订单 | PRD_MO | `--bill-no` |
 | `production ppbom` | 生产用料清单 | PRD_PPBOM | `--bill-no` `--mo` |
 | `production pick` | 生产领料 | PRD_PICKMTRL | `--bill-no` `--date-from/-to` |
@@ -57,6 +58,8 @@ metadata:
 | `plan forecast` | 预测单 | PLN_FORECAST | `--bill-no` `--date-from/-to` |
 | `engineering route` | 工艺路线 | ENG_Route | `--number` `--material` |
 | `engineering workcenter` | 工作中心 | ENG_WorkCenter | `--number` `--keyword` |
+| `workshop process` | 工序 | PLM_STD_PROCESS | `--keyword` |
+| `workshop in-output` | 车间投入产出 | CB_SFCINOUTPUTBILL | `--bill-no` |
 | `costing dimension` | 核算维度 | BD_FLEXITEMPROPERTY | `--number` `--keyword` |
 
 > BOM（物料清单 ENG_BOM）有独立命令：`openerp bom view --number` / `openerp bom list --material`（见 `../openerp-bom`）。
@@ -67,6 +70,7 @@ openerp base material list --keyword 控制器 --format table
 openerp purchase order list --supplier 01.001 --date-from 2024-01-01 --top 50
 openerp sales order view --number XSDD000006
 openerp inventory transfer list --date-from 2024-01-01 --page-all
+openerp inventory balance list --material 2.60.51.0439          # 某物料各仓现存量
 openerp purchase price list --material 4.50.20.1549 --jq '.data'
 ```
 

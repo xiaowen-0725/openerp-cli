@@ -37,9 +37,10 @@ openerp query --form-id SAL_SaleOrder \
 - **查询要带过滤或 --top**，避免全表扫描；超过 2000 行用 `--page-all`。
 - 某字段整列为 `null`：多为无数据权限或字段名拼错 → 回到 `schema` 核对。
 
-## 两类对象不能走通用查询（需专用接口，暂不支持）
-- **即时库存现量** `STK_InventoryQuery`：无字段模型，需专用库存接口。
-- **报表/账表**（模型类型 900、GUID 命名，如“销售订单执行明细表/销售明细表”）：需 `GetSysReportData`；或改用对应单据（如 `SAL_OUTSTOCK` 出库明细）复现。
+## 命名陷阱与不支持项
+- **即时库存现量用 `STK_Inventory`（现存量余额对象），不是 `STK_InventoryQuery`**（后者是查询界面，无字段模型）。已封装为 `openerp inventory balance list`。
+- **报表/账表**（模型类型 900、GUID 命名，如“销售订单执行明细表/销售明细表”）：**仍不支持**，需 `GetSysReportData`；或改用对应单据（如 `SAL_OUTSTOCK` 出库明细）复现。
+- 个别对象 `QueryBusinessInfo` 返回空模型（如车间成本计算 `CB_SFCCostCalBill`）→ 无可查字段，不能走通用查询。
 
 ## objects 命令
 ```bash

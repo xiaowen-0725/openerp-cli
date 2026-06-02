@@ -164,6 +164,12 @@
             { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" },
             { "flag": "date-from", "template": "FDate>='{{.}}'", "desc": "起始日期" },
             { "flag": "date-to", "template": "FDate<='{{.}}'", "desc": "截止日期" }
+          ] },
+        { "name": "balance", "title": "即时库存现量 (STK_Inventory)", "formId": "STK_Inventory", "verified": true, "note": "现存量余额，按物料/仓库过滤",
+          "defaultFields": ["FStockId.FName", "FMaterialId.FNumber", "FMaterialId.FName", "FBaseQty", "FStockStatusId.FName"],
+          "filters": [
+            { "flag": "material", "template": "FMaterialId.FNumber='{{.}}'", "desc": "物料编码" },
+            { "flag": "stock", "template": "FStockId.FNumber='{{.}}'", "desc": "仓库编码" }
           ] }
       ]
     },
@@ -278,6 +284,22 @@
           "filters": [
             { "flag": "number", "template": "FNumber='{{.}}'", "desc": "工作中心编码" },
             { "flag": "keyword", "template": "FName like '%{{.}}%'", "desc": "名称模糊" }
+          ] }
+      ]
+    },
+    {
+      "name": "workshop",
+      "title": "车间管理",
+      "objects": [
+        { "name": "process", "title": "工序 (PLM_STD_PROCESS)", "formId": "PLM_STD_PROCESS", "numberField": "FFLOWNUMBER", "verified": true, "note": "工序定义；本实例暂无数据",
+          "defaultFields": ["FFLOWNUMBER", "FName", "FFLOWSTATUS"],
+          "filters": [
+            { "flag": "keyword", "template": "FName like '%{{.}}%'", "desc": "名称模糊" }
+          ] },
+        { "name": "in-output", "title": "车间投入产出 (CB_SFCINOUTPUTBILL)", "formId": "CB_SFCINOUTPUTBILL", "numberField": "FBillNo", "supportsView": true, "verified": true, "note": "本实例暂无数据；分录字段(物料/工序/数量)需 schema 下钻后追加",
+          "defaultFields": ["FBillNo", "FDocumentStatus", "FCreateDate"],
+          "filters": [
+            { "flag": "bill-no", "template": "FBillNo='{{.}}'", "desc": "单据编号" }
           ] }
       ]
     },
