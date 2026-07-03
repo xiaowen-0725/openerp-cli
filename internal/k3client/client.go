@@ -251,6 +251,73 @@ func (c *Client) QueryBusinessInfo(ctx context.Context, formID string) ([]byte, 
 	return c.Call(ctx, EndpointQueryBusinessInfo, BuildBusinessInfoParams(formID))
 }
 
+// attachmentDownLoadReq is the inner AttachmentDownLoad payload.
+type attachmentDownLoadReq struct {
+	FileID     string `json:"FileId"`
+	StartIndex int64  `json:"StartIndex"`
+}
+
+// BuildAttachmentDownLoadParams returns the `parameters` JSON string for an
+// AttachmentDownLoad call (an array containing one JSON-string element), the
+// same wrapping ExecuteBillQuery uses. Verified against the live instance.
+func BuildAttachmentDownLoadParams(fileID string, startIndex int64) string {
+	inner, _ := json.Marshal(attachmentDownLoadReq{FileID: fileID, StartIndex: startIndex})
+	params, _ := json.Marshal([]string{string(inner)})
+	return string(params)
+}
+
+// AttachmentDownLoadResult is one chunk of a download response. The caller
+// loops AttachmentDownLoadChunk, decoding FilePart (base64) and accumulating
+// bytes, until IsLast is true.
+type AttachmentDownLoadResult struct {
+	ResponseStatus struct {
+		IsSuccess bool `json:"IsSuccess"`
+		Errors    []struct {
+			FieldName string `json:"FieldName"`
+			Message   string `json:"Message"`
+		} `json:"Errors"`
+		ErrorCode int `json:"ErrorCode"`
+		MsgCode   int `json:"MsgCode"`
+	} `json:"ResponseStatus"`
+	StartIndex int64  `json:"StartIndex"` // byte offset where the NEXT chunk starts
+	IsLast     bool   `json:"IsLast"`
+	FileSize   int64  `json:"FileSize"` // total file size in bytes
+	FileName   string `json:"FileName"` // server-side file name
+	FilePart   string `json:"FilePart"` // base64-encoded chunk bytes
+	Message    string `json:"Message"`
+}
+
+// AttachmentDownLoadChunk fetches ONE chunk of a file starting at startIndex.
+// The caller loops until result.IsLast, accumulating decoded FilePart bytes.
+// A K3 business-level failure (IsSuccess=false) is mapped to a typed
+// *errs.APIError (exit 1). Verified chunk size is 1MB (1048576 bytes).
+func (c *Client) AttachmentDownLoadChunk(ctx context.Context, fileID string, startIndex int64) (*AttachmentDownLoadResult, error) {
+	raw, err := c.Call(ctx, EndpointAttachmentDownLoad, BuildAttachmentDownLoadParams(fileID, startIndex))
+	if err != nil {
+		return nil, err
+	}
+	var resp struct {
+		Result AttachmentDownLoadResult `json:"Result"`
+	}
+	if err := json.Unmarshal(raw, &resp); err != nil {
+		return nil, errs.NewAPI("AttachmentDownLoad 响应解析失败: "+snippet(raw),
+			"确认 --file-id 是否有效", 0, nil)
+	}
+	r := &resp.Result
+	if !r.ResponseStatus.IsSuccess {
+		msg := r.Message
+		if len(r.ResponseStatus.Errors) > 0 && r.ResponseStatus.Errors[0].Message != "" {
+			msg = r.ResponseStatus.Errors[0].Message
+		}
+		if msg == "" {
+			msg = "K3 返回 IsSuccess=false"
+		}
+		return nil, errs.NewAPI("附件下载失败: "+msg,
+			"确认 --file-id 是否有效、附件是否被禁用", r.ResponseStatus.ErrorCode, nil)
+	}
+	return r, nil
+}
+
 // BusinessInfo is a compact view of a QueryBusinessInfo response.
 type BusinessInfo struct {
 	FormID  string          `json:"formId"`

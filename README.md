@@ -3,7 +3,7 @@
 金蝶云·星空 (Kingdee K3 Cloud) ERP CLI —— 为人和 AI Agent 而生。
 
 > **可行性 POC（只读）**。打通「配置凭据 → LoginBySign 鉴权 → 真实只读查询 → 干净 JSON → agent 经 SKILL.md 消费」的端到端链路。
-> 已落地：10 域/39 对象的领域命令、发现层(`objects`/`schema`)、客户端聚合(`--sum`/`--group-by`)、对象经验沉淀、未配置引导、npm 分发(goreleaser + CI)。
+> 已落地：10 域/39 对象的领域命令、发现层(`objects`/`schema`)、客户端聚合(`--sum`/`--group-by`)、附件下载(`attachment list`/`get`)、对象经验沉淀、未配置引导、npm 分发(goreleaser + CI)。
 > 后续阶段：**写操作**（走 `--yes/--read-only` 护栏）、**代码生成**（`cmd/gen`）。
 
 ## 安装
@@ -40,6 +40,10 @@ openerp bom list --material "1.30.67.0132"
 openerp query --form-id PUR_PriceCategory \
   --fields "FMaterialId.FNumber,FPrice,FTaxPrice,FTaxRate,FDocumentStatus" \
   --filter "FMaterialId.FNumber='4.50.20.1549'" --jq '.data'
+
+# 5) 附件下载（查列表 → 按 FileId 下载,分块 1MB）
+openerp attachment list --bill-no 1.20.03.0007 --bill-type BD_MATERIAL
+openerp attachment get --file-id <上面拿到的 FFileId> --out ./downloads/
 ```
 
 ## 全局开关

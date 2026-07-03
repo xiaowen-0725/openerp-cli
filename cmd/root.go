@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	attachmentcmd "github.com/xiaowen-0725/openerp-cli/cmd/attachment"
 	authcmd "github.com/xiaowen-0725/openerp-cli/cmd/auth"
 	bomcmd "github.com/xiaowen-0725/openerp-cli/cmd/bom"
 	configcmd "github.com/xiaowen-0725/openerp-cli/cmd/config"
@@ -71,6 +72,7 @@ func NewRootCmd(f *cmdutil.Factory) *cobra.Command {
 		schemacmd.New(f),
 		querycmd.New(f),
 		bomcmd.New(f),
+		attachmentcmd.New(f),
 		updatecmd.New(f),
 		updatecmd.NewHidden(f),
 	)

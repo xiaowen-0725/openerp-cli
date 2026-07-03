@@ -33,11 +33,11 @@ make unit-test    # 仅单测
 | 路径 | 职责 |
 |------|------|
 | `cmd/root.go` | 装配根命令、全局 flag、纯分组守卫、退出码路由 |
-| `cmd/{config,auth,doctor,objects,schema,query,bom}/` | 各命令；领域命令由 catalog 数据驱动(`cmdutil/domaincmd.go` ← `internal/catalog/domains.json`，10 域/39 对象) |
+| `cmd/{config,auth,doctor,objects,schema,query,bom,attachment}/` | 各命令；领域命令由 catalog 数据驱动(`cmdutil/domaincmd.go` ← `internal/catalog/domains.json`，10 域/39 对象)。`attachment list` 包装 query BOS_Attachment;`get` 是首个产出二进制命令(分块下载) |
 | `internal/cmdutil/factory.go` | Factory(依赖注入) + IOStreams + `Config()`/`Client()` |
-| `internal/cmdutil/run.go` | `RunBillQuery`/`RunView`/`RunBusinessInfo`：dry-run、分页、聚合(`--sum`/`--group-by`)、信封渲染的共享路径 |
+| `internal/cmdutil/run.go` | `RunBillQuery`/`RunView`/`RunBusinessInfo`/`RunAttachmentDownLoad`：dry-run、分页、聚合(`--sum`/`--group-by`)、分块下载、信封渲染的共享路径 |
 | `internal/config/` | profile 凭据存储(0600)、env 覆盖、`Resolve` |
-| `internal/k3client/` | **K3 鉴权内核**：LoginBySign 签名、`china_to_unicode`、session 复用、失效重登、ExecuteBillQuery/View |
+| `internal/k3client/` | **K3 鉴权内核**：LoginBySign 签名、`china_to_unicode`、session 复用、失效重登、ExecuteBillQuery/View/AttachmentDownLoad |
 | `internal/output/` | Envelope、退出码、json/ndjson/table/csv 渲染、jq 子集、错误信封 |
 | `errs/` | 强类型错误契约（Problem + 各 Category 类型） |
 

@@ -1,6 +1,13 @@
 package cmdutil
 
-import "testing"
+import (
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/xiaowen-0725/openerp-cli/errs"
+)
 
 func TestEnsureFields(t *testing.T) {
 	got := ensureFields("FBillNo,FDate", "FCustId.FName", "FBillAllAmount_LC", "FDate")
@@ -54,5 +61,63 @@ func TestAggregateGroupSortedDesc(t *testing.T) {
 func TestAggregateMissingField(t *testing.T) {
 	if _, _, err := aggregate([]string{"FBillNo"}, nil, "FNope", ""); err == nil {
 		t.Error("expected error for --sum field not in columns")
+	}
+}
+
+// TestResolveOutPath covers the four branches: default name, dir join, explicit
+// file, and the exists-without-overwrite guard. Uses t.TempDir for isolation.
+func TestResolveOutPath(t *testing.T) {
+	dir := t.TempDir()
+
+	// 1) empty outFlag → ./<serverName>; resolve to abs for the existence check.
+	got, err := resolveOutPath("", "a.zip", false)
+	if err != nil {
+		t.Fatalf("default: %v", err)
+	}
+	if !strings.HasSuffix(got, "/a.zip") {
+		t.Errorf("default path = %s, want suffix /a.zip", got)
+	}
+
+	// 2) outFlag is a dir → join.
+	got, err = resolveOutPath(dir, "b.zip", false)
+	if err != nil {
+		t.Fatalf("dir: %v", err)
+	}
+	if want := filepath.Join(dir, "b.zip"); got != want {
+		t.Errorf("dir path = %s, want %s", got, want)
+	}
+
+	// 3) outFlag is an explicit file path.
+	explicit := filepath.Join(dir, "custom.zip")
+	got, err = resolveOutPath(explicit, "ignored.zip", false)
+	if err != nil {
+		t.Fatalf("explicit: %v", err)
+	}
+	if got != explicit {
+		t.Errorf("explicit path = %s, want %s", got, explicit)
+	}
+
+	// 4) target exists, overwrite=false → *ValidationError.
+	existing := filepath.Join(dir, "exists.zip")
+	if f, e := os.Create(existing); e == nil {
+		f.Close()
+	} else {
+		t.Fatalf("setup: %v", e)
+	}
+	_, err = resolveOutPath(existing, "x.zip", false)
+	if err == nil {
+		t.Fatal("expected error for existing file without overwrite")
+	}
+	if _, ok := errs.ProblemOf(err); !ok {
+		t.Fatalf("want typed errs error, got %T: %v", err, err)
+	}
+
+	// 5) same target with overwrite=true → ok.
+	got, err = resolveOutPath(existing, "x.zip", true)
+	if err != nil {
+		t.Fatalf("overwrite: %v", err)
+	}
+	if got != existing {
+		t.Errorf("overwrite path = %s, want %s", got, existing)
 	}
 }

@@ -2,8 +2,10 @@ package k3client
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -126,5 +128,92 @@ func TestLoginFail(t *testing.T) {
 	var ae *errs.AuthError
 	if !errors.As(err, &ae) {
 		t.Fatalf("want *errs.AuthError, got %T: %v", err, err)
+	}
+}
+
+// TestAttachmentDownLoadChunkBusinessError maps IsSuccess=false to a typed
+// *errs.APIError (exit 1), surfacing the K3 error message.
+func TestAttachmentDownLoadChunkBusinessError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		io.WriteString(w, `{"Result":{"ResponseStatus":{"IsSuccess":false,"ErrorCode":500,"Errors":[{"Message":"文件不存在"}]}}}`)
+	}))
+	defer srv.Close()
+
+	c := newTestClient(srv.URL)
+	c.session = "SESS-X"
+	_, err := c.AttachmentDownLoadChunk(context.Background(), "nope", 0)
+	if err == nil {
+		t.Fatal("expected an error")
+	}
+	var ae *errs.APIError
+	if !errors.As(err, &ae) {
+		t.Fatalf("want *errs.APIError, got %T: %v", err, err)
+	}
+	if !strings.Contains(err.Error(), "文件不存在") {
+		t.Errorf("error should carry K3 message, got: %v", err)
+	}
+}
+
+// TestAttachmentDownLoadChunkMultiBlock serves a 2-chunk download (verified chunk
+// size is 1MB) and asserts the caller can loop StartIndex → IsLast to reassemble
+// the decoded bytes. Models the RunAttachmentDownLoad loop in cmdutil.
+func TestAttachmentDownLoadChunkMultiBlock(t *testing.T) {
+	first := strings.Repeat("A", 1048576) // 1MB, fits one base64 chunk
+	second := "B"                         // tiny tail
+	full := first + second
+	b64First := base64.StdEncoding.EncodeToString([]byte(first))
+	b64Second := base64.StdEncoding.EncodeToString([]byte(second))
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		raw, _ := io.ReadAll(req.Body)
+		var body struct {
+			Parameters string `json:"parameters"`
+		}
+		_ = json.Unmarshal(raw, &body)
+		var params []string
+		_ = json.Unmarshal([]byte(body.Parameters), &params)
+		var inner struct {
+			StartIndex int64 `json:"StartIndex"`
+		}
+		_ = json.Unmarshal([]byte(params[0]), &inner)
+
+		if inner.StartIndex == 0 {
+			io.WriteString(w, fmt.Sprintf(`{"Result":{"ResponseStatus":{"IsSuccess":true},"StartIndex":1048576,"IsLast":false,"FileSize":%d,"FileName":"x.zip","FilePart":"%s"}}`, len(full), b64First))
+		} else {
+			io.WriteString(w, fmt.Sprintf(`{"Result":{"ResponseStatus":{"IsSuccess":true},"StartIndex":%d,"IsLast":true,"FileSize":%d,"FileName":"x.zip","FilePart":"%s"}}`, len(full), len(full), b64Second))
+		}
+	}))
+	defer srv.Close()
+
+	c := newTestClient(srv.URL)
+	c.session = "SESS-X"
+
+	var assembled []byte
+	start := int64(0)
+	chunks := 0
+	for {
+		r, err := c.AttachmentDownLoadChunk(context.Background(), "fid", start)
+		if err != nil {
+			t.Fatalf("chunk %d: %v", chunks, err)
+		}
+		part, derr := base64.StdEncoding.DecodeString(r.FilePart)
+		if derr != nil {
+			t.Fatalf("decode chunk %d: %v", chunks, derr)
+		}
+		assembled = append(assembled, part...)
+		chunks++
+		if r.IsLast {
+			break
+		}
+		start = r.StartIndex
+	}
+	if chunks != 2 {
+		t.Errorf("chunks = %d, want 2", chunks)
+	}
+	if len(assembled) != len(full) {
+		t.Errorf("assembled len = %d, want %d", len(assembled), len(full))
+	}
+	if string(assembled) != full {
+		t.Errorf("assembled content mismatch")
 	}
 }

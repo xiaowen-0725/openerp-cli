@@ -22,6 +22,7 @@ GOPROXY=off go build ./...   # 离线可构建（依赖仅 spf13/cobra，已缓�
   - `china_to_unicode`：把 parameters 串里 0x4E00–0x29FA5 的 CJK 转成 `\uXXXX`（K3 怪癖，移植自 Python）。
   - 请求带 `kdservice-sessionid` 头；响应原文含「登录」→ 清 session + 重登 + 重试一次。
   - `ExecuteBillQuery` / `View`：`parameters` 是「含一个 JSON 字符串元素的数组」。
+  - `AttachmentDownLoad`：同形态 `["{FileId,StartIndex}"]`,**分块下载**(实测块 1MB),`AttachmentDownLoadChunk` 拉一块、上层循环到 `IsLast`；get 是首个产出二进制文件的命令(进度→stderr、结果信封→stdout)。
 - 输出契约在 `internal/output/`，错误类型在 `errs/`（见 `AGENTS.md`）。
 
 ## 约定

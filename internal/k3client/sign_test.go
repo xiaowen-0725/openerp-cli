@@ -12,6 +12,16 @@ func TestSha256SortedSign(t *testing.T) {
 	}
 }
 
+// TestBuildAttachmentDownLoadParams pins the wrapping form (one JSON-string
+// element, matching ExecuteBillQuery). Verified against the live instance.
+func TestBuildAttachmentDownLoadParams(t *testing.T) {
+	got := BuildAttachmentDownLoadParams("99f4cb", 0)
+	want := `["{\"FileId\":\"99f4cb\",\"StartIndex\":0}"]`
+	if got != want {
+		t.Errorf("BuildAttachmentDownLoadParams = %s, want %s", got, want)
+	}
+}
+
 // TestChinaToUnicode verifies CJK runes become lower-case \uXXXX escapes while
 // everything else passes through. The `in` fields are real CJK glyphs; the
 // `want` fields use "\\u...." so the expected value is the literal 6-char

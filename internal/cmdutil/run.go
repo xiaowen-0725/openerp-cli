@@ -2,8 +2,11 @@ package cmdutil
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -322,4 +325,121 @@ func digResponseStatus(m map[string]interface{}) map[string]interface{} {
 		}
 	}
 	return nil
+}
+
+// resolveOutPath decides the final file path for a downloaded attachment.
+// outFlag empty  → "./<serverFileName>"
+// outFlag is dir → "<dir>/<serverFileName>"
+// outFlag is file→ outFlag as-is
+// If the target exists and overwrite is false, returns a *ValidationError so the
+// user gets an actionable hint (exit 2).
+func resolveOutPath(outFlag, serverFileName string, overwrite bool) (string, error) {
+	path := "./" + serverFileName
+	if outFlag != "" {
+		if info, err := os.Stat(outFlag); err == nil && info.IsDir() {
+			path = filepath.Join(outFlag, serverFileName)
+		} else {
+			path = outFlag
+		}
+	}
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return "", errs.NewValidation("无法解析输出路径: "+err.Error(), "检查 --out 是否合法", "out")
+	}
+	if !overwrite {
+		if _, err := os.Stat(abs); err == nil {
+			return "", errs.NewValidation("目标文件已存在: "+abs,
+				"加 --overwrite 覆盖,或换一个 --out 路径", "out")
+		}
+	}
+	return abs, nil
+}
+
+// RunAttachmentDownLoad fetches all chunks of an attachment and writes them to a
+// local file. It loops AttachmentDownLoadChunk until IsLast, decoding each base64
+// FilePart into the output file. Progress is written to stderr (human-readable);
+// on success a small JSON result envelope goes to stdout (machine-readable). This
+// split honors the stdout=data / stderr=everything-else contract. On any failure
+// mid-stream the partial file is closed and removed so no truncated file remains.
+func (f *Factory) RunAttachmentDownLoad(ctx context.Context, fileID, outFlag string, overwrite bool) error {
+	c, err := f.Client()
+	if err != nil {
+		return err
+	}
+
+	// dry-run prints only the first chunk's request (no login, no send).
+	if f.DryRun {
+		p := c.Prepare(k3client.EndpointAttachmentDownLoad, k3client.BuildAttachmentDownLoadParams(fileID, 0))
+		return output.EmitData(f.IOStreams.Out, f.Format, f.Jq, p, nil)
+	}
+
+	var (
+		file       *os.File
+		path       string
+		serverName string
+		total      int64
+		chunks     int
+	)
+	start := int64(0)
+	for {
+		r, err := c.AttachmentDownLoadChunk(ctx, fileID, start)
+		if err != nil {
+			if file != nil {
+				file.Close()
+				_ = os.Remove(path) // clean up the partial file
+				fmt.Fprintf(f.IOStreams.Err, "下载失败,已删除未完成的文件: %s\n", path)
+			}
+			return err
+		}
+		// First chunk: lock the output path (server FileName) and open the file.
+		if chunks == 0 {
+			serverName = r.FileName
+			path, err = resolveOutPath(outFlag, r.FileName, overwrite)
+			if err != nil {
+				return err
+			}
+			if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+				return errs.NewValidation("无法创建输出目录: "+err.Error(), "检查 --out 所在目录权限", "out")
+			}
+			file, err = os.Create(path)
+			if err != nil {
+				return errs.NewValidation("无法创建输出文件: "+err.Error(), "检查 --out 路径权限", "out")
+			}
+		}
+		// Decode this chunk's base64 payload and append to the file.
+		part, derr := base64.StdEncoding.DecodeString(r.FilePart)
+		if derr != nil {
+			file.Close()
+			_ = os.Remove(path)
+			fmt.Fprintf(f.IOStreams.Err, "base64 解码失败,已删除未完成的文件: %s\n", path)
+			return errs.NewAPI("附件块 base64 解码失败: "+derr.Error(), "", 0, nil)
+		}
+		if _, werr := file.Write(part); werr != nil {
+			file.Close()
+			_ = os.Remove(path)
+			fmt.Fprintf(f.IOStreams.Err, "写文件失败,已删除未完成的文件: %s\n", path)
+			return errs.NewValidation("写文件失败: "+werr.Error(), "检查磁盘空间与 --out 路径权限", "out")
+		}
+		total += int64(len(part))
+		chunks++
+		fmt.Fprintf(f.IOStreams.Err, "[%d] %s 已下载 %d/%d bytes\n", chunks, r.FileName, total, r.FileSize)
+		if r.IsLast {
+			break
+		}
+		start = r.StartIndex
+	}
+	if file != nil {
+		if err := file.Close(); err != nil {
+			return errs.NewValidation("关闭文件失败: "+err.Error(), "", "out")
+		}
+	}
+
+	// stdout: small result envelope so an agent can confirm the download.
+	return output.EmitData(f.IOStreams.Out, f.Format, f.Jq,
+		map[string]any{
+			"fileName": serverName,
+			"path":     path,
+			"size":     total,
+			"chunks":   chunks,
+		}, nil)
 }
